@@ -1845,6 +1845,7 @@ Report back what breaks, if anything, and I'll fix it before Phase 2.
 | Secondary | `#577BC1` |
 | Accent | `#0EA5E9` |
 | Dark | `#000957` |
+[package.json](https://github.com/user-attachments/files/32349525/package.json)
 
 export default eslintConfig;
 
