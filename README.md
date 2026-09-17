@@ -780,3 +780,614 @@ const config: Config = {
 };
 
 export default config;
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  reactStrictMode: true,
+  images: {
+    // Cloudinary will host uploaded product images from Phase 2 onward.
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com", // Google account profile photos
+      },
+    ],
+  },
+};
+
+export default nextConfig;
+
+{
+  "name": "offer-for-you",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Offer For You - BNK AI Ad Studio. AI-powered affiliate advertisement asset generator.",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "next": "^15.5.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "firebase": "^11.1.0",
+    "clsx": "^2.1.1",
+    "cloudinary": "^2.5.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "tailwindcss": "^3.4.17",
+    "postcss": "^8.4.49",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.17.0",
+    "eslint-config-next": "^15.5.0",
+    "@eslint/eslintrc": "^3.2.0"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  }
+}
+
+/** @type {import('postcss-load-config').Config} */
+const config = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
+
+export default config;
+
+# Offer For You — BNK AI Ad Studio (V1.0)
+
+A SaaS platform where a user uploads a product image and AI generates a
+full affiliate ad kit: prompts, video scripts, captions, WhatsApp copy,
+hashtags, and downloadable assets.
+
+This repo is being built **phase by phase**. Each phase is fully working
+and testable on its own before the next one starts.
+
+## Phase 1 — Auth & Dashboard (this delivery)
+
+**Included:**
+- Next.js 15 (App Router) + TypeScript + Tailwind CSS project scaffold
+- Dark theme, mobile-first responsive UI, brand colors wired into Tailwind
+- Premium marketing landing page at `/` — Hero, Features, How It Works,
+  Pricing (Coming Soon), FAQ, Footer, with Login / Start Free CTAs
+- Google Sign-In via Firebase Authentication
+- Client-side protected `/dashboard` route (redirects to `/login` if signed out)
+- Dashboard shell: sidebar (desktop) / drawer + bottom nav (mobile), topbar
+  with profile menu and sign-out
+- Dashboard widgets, as responsive cards: **Upload Product** (now live —
+  see Phase 2 below), **Recent Projects** (honest empty state — no fake
+  sample data — ready to list real projects once Supabase persistence
+  exists), **AI Credits** (shows the true `0` used; live tracking arrives
+  with Phase 3's generators), **Download History** (empty state until
+  Phase 5), **Profile** (real: avatar, name, email, Google badge, join
+  date, sign out)
+- Placeholder cards for every V1.0 feature (Prompt Generator, Script
+  Generator, Caption Generator, WhatsApp Copy, Hashtag Generator, Downloads)
+  so the full product shape is visible from day one
+
+**Not included yet** (later phases): Supabase persistence (saving
+uploads/projects against a user), OpenAI-powered generators, and asset
+downloads. Their env vars are already reserved in `.env.local.example`
+so nothing has to be restructured later.
+
+## Phase 2 — Image Upload (Cloudinary)
+
+**Included:**
+- Drag-and-drop **and** click-to-browse upload in the "Upload Product"
+  dashboard widget
+- Live **preview** thumbnail for every file, generated locally before
+  upload even starts
+- Real **progress bar** per file, driven by actual upload progress events
+  (not a fake timer)
+- **File validation** — type (JPG/PNG/WebP only) and size (8MB max),
+  checked before upload, with the specific reason shown inline on
+  rejected files
+- **Delete** that actually works: removing a file that's still uploading
+  cancels the request; removing one that's already on Cloudinary calls a
+  server route (`/api/uploads/delete`) that signs a real delete request
+  with the Cloudinary Admin SDK
+- Files upload directly from the browser to Cloudinary via an **unsigned
+  upload preset** — no file ever passes through our own server, so
+  uploads aren't bottlenecked by it
+
+**Not included yet:** uploaded photos aren't saved anywhere durable yet
+(no Supabase table exists), so they won't appear in "Recent Projects"
+and are **not** tied to your account — refreshing the page clears the
+list from view (though the files remain on Cloudinary until deleted).
+Wiring uploads to a real "projects" record is part of the Supabase work
+still to come.
+
+**Security note:** the delete route currently has no ownership check —
+anyone who knows a `publicId` could ask the API to delete it, since
+there's no database yet linking uploads to users. This is fine for this
+single-tenant testing phase; the code has a `TODO` marking exactly where
+to add an ownership check once Supabase exists.
+
+## Tech stack
+
+- Next.js 15 (App Router), TypeScript, Tailwind CSS
+- Firebase Authentication (Google provider)
+- Cloudinary (image upload, Phase 2 — live)
+- Supabase (Phase 2+, persistence — not yet), OpenAI API (Phase 3+), Kling API (future)
+
+## Prerequisites
+
+- Node.js 18.18+ (Node 20 LTS recommended)
+- A Firebase project with the **Google** sign-in provider enabled
+- A Cloudinary account with an **unsigned upload preset** (free tier is fine)
+
+> Note: this project was authored in a sandboxed environment without
+> package-registry access, so `npm install` / `npm run build` have not
+> been run here. Please run them locally as the first test — see
+> "Phase 1 Test" below.
+
+## Setup
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Set up Firebase — see the **Firebase Console Setup** walkthrough below
+   if this is your first time; short version:
+   - Build → Authentication → Sign-in method → enable **Google**
+   - Project settings → General → "Your apps" → add a **Web app** →
+     copy the `firebaseConfig` values
+3. Set up Cloudinary — see the **Cloudinary Console Setup** walkthrough
+   below; short version: grab your cloud name from the dashboard, create
+   an unsigned upload preset, and grab your API key/secret.
+4. Copy the env template and fill it in:
+   ```bash
+   cp .env.local.example .env.local
+   ```
+   Fill in the six `NEXT_PUBLIC_FIREBASE_*` values and the four
+   `CLOUDINARY_*` / `NEXT_PUBLIC_CLOUDINARY_*` values. Leave Supabase /
+   OpenAI / Kling blank — they're reserved for later phases.
+5. Run the dev server:
+   ```bash
+   npm run dev
+   ```
+   Open http://localhost:3000
+6. Click **Get started free** → **Continue with Google** → you should
+   land on `/dashboard` signed in, and refreshing should keep you signed
+   in (and redirect straight to `/dashboard` from `/`).
+
+## Firebase Console Setup (step by step)
+
+Everything here happens at https://console.firebase.google.com — no
+billing account or credit card needed for Authentication.
+
+**1. Create the project**
+1. Click **Add project** (or **Create a project**).
+2. Enter a project name, e.g. `offer-for-you`. Firebase suggests a unique
+   project ID underneath — you can leave it as-is.
+3. You'll be asked about Google Analytics — you can toggle it **off** for
+   this project; it isn't needed for Authentication.
+4. Click **Create project** and wait for it to finish provisioning.
+
+**2. Enable the Google sign-in provider**
+1. In the left sidebar, open **Build → Authentication**.
+2. Click **Get started** (first time only).
+3. Go to the **Sign-in method** tab.
+4. Click **Google** in the provider list.
+5. Toggle **Enable**.
+6. Set a **Project public-facing name** (shown on the Google consent
+   screen, e.g. "Offer For You") and a **Project support email** (pick
+   your own email from the dropdown).
+7. Click **Save**.
+
+**3. Register a Web app and get your config**
+1. Click the **gear icon → Project settings** in the left sidebar.
+2. Scroll to **Your apps** and click the **`</>`** (Web) icon to add a
+   web app.
+3. Give it a nickname, e.g. `offer-for-you-web`. You do **not** need to
+   check "Also set up Firebase Hosting."
+4. Click **Register app**. Firebase shows a `firebaseConfig` object —
+   copy the six values (`apiKey`, `authDomain`, `projectId`,
+   `storageBucket`, `messagingSenderId`, `appId`) into your `.env.local`
+   as the matching `NEXT_PUBLIC_FIREBASE_*` variables.
+5. Click **Continue to console** — you can skip the SDK install
+   instructions Firebase shows, since the `firebase` npm package is
+   already in this project's `package.json`.
+
+**4. Authorize the domains that will run this app**
+1. Still in **Authentication**, go to the **Settings** tab → **Authorized
+   domains**.
+2. `localhost` is included by default, so local development works
+   immediately.
+3. When you deploy, add your deployed domain here too (e.g.
+   `your-app.vercel.app`, and later your custom domain) — otherwise
+   Google sign-in fails on that domain with `auth/unauthorized-domain`.
+
+**5. Confirm it's wired up correctly**
+1. In this project, copy `.env.local.example` to `.env.local` and paste
+   in the six values from step 3.
+2. Run `npm run dev`, open the app, and click **Start Free** or
+   **Login → Continue with Google**.
+3. A Google account-picker popup should appear. After choosing an
+   account, you should land on `/dashboard` with your name, email and
+   photo showing in the top-right menu.
+
+**Common issues**
+- **`auth/unauthorized-domain`** — the domain you're testing from isn't
+  in Authorized domains (step 4).
+- **Popup closes immediately / `auth/popup-blocked`** — your browser
+  blocked the sign-in popup; allow popups for `localhost` and retry.
+- **Sign-in button is disabled** — `.env.local` is missing or one of the
+  six `NEXT_PUBLIC_FIREBASE_*` values is empty; check the browser
+  console for the exact missing-key warning this project logs.
+
+## Cloudinary Console Setup (step by step)
+
+Everything here happens at https://console.cloudinary.com — the free
+tier is enough for development.
+
+**1. Create an account and find your cloud name**
+1. Sign up (or log in) at https://cloudinary.com.
+2. On the **Dashboard**, copy the **Cloud name** shown near the top —
+   this goes in `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`.
+
+**2. Create an unsigned upload preset**
+Uploads happen directly from the browser, so they use an *unsigned*
+preset rather than your secret API key.
+1. Go to the **gear icon → Settings → Upload**.
+2. Scroll to **Upload presets** → click **Add upload preset**.
+3. Set **Signing Mode** to **Unsigned**.
+4. (Recommended) Set **Folder** to `offer-for-you/products` so every
+   upload from this app is organized under one folder automatically.
+5. (Recommended, defense-in-depth) Under the preset's restrictions, set
+   **Allowed formats** to `jpg, png, webp` and a max file size — this
+   backs up the client-side validation this project already does.
+6. Click **Save**, then copy the preset's **name** into
+   `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`.
+
+**3. Get your API key and secret (for deleting files)**
+1. Back on the **Dashboard**, find **API Key** and **API Secret** (click
+   "reveal" for the secret).
+2. Copy them into `CLOUDINARY_API_KEY` and `CLOUDINARY_API_SECRET` — no
+   `NEXT_PUBLIC_` prefix on these two; they must stay server-only.
+
+**4. Confirm it's wired up correctly**
+1. Fill in all four Cloudinary values in `.env.local`.
+2. Run `npm run dev`, sign in, and on the dashboard's Upload Product
+   card, drag in a JPG or PNG.
+3. You should see a thumbnail preview immediately, a progress bar while
+   it uploads, then a green "Uploaded" badge and a "View on Cloudinary"
+   link — click it to confirm the file really is on Cloudinary.
+4. Click the trash icon to delete it — the item should disappear from
+   the list. To fully confirm, check Cloudinary's **Media Library** in
+   the console; the file (and folder, if you set one) should be gone.
+
+**Common issues**
+- **Upload silently fails / network error** — double check
+  `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` and
+  `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` are both set and the preset is
+  actually **Unsigned** (a signed preset will reject browser uploads
+  that don't include a signature).
+- **"Upload preset not found"** — the preset name in `.env.local`
+  doesn't match one in Console > Settings > Upload exactly (case-sensitive).
+- **Delete button shows an error** — `CLOUDINARY_API_KEY` /
+  `CLOUDINARY_API_SECRET` are missing from `.env.local`, or the dev
+  server needs a restart after adding them (Next.js only reads
+  `.env.local` at startup).
+
+## Folder structure
+
+```
+src/
+  app/
+    layout.tsx          Root layout (fonts, dark theme, AuthProvider)
+    page.tsx             Public landing page
+    login/page.tsx        Google sign-in screen
+    dashboard/
+      layout.tsx          AuthGuard + DashboardShell wrapper
+      page.tsx            Dashboard home (widget grid)
+    api/uploads/delete/route.ts  Server route: signed Cloudinary destroy
+  components/
+    ui/                  Button, Card, Icon — generic building blocks
+    landing/             Navbar, Hero, Features, HowItWorks, Pricing, FAQ,
+                          Footer, LandingPage (composes all of the above),
+                          content.ts (all landing page copy)
+    layout/              Sidebar, Topbar, MobileNav, DashboardShell
+    auth/                GoogleSignInButton, AuthGuard, UserAvatar
+    dashboard/           UploadProductWidget, RecentProjectsWidget,
+                          AICreditsWidget, DownloadHistoryWidget,
+                          ProfileWidget, EmptyState (shared empty-state UI)
+    upload/              Dropzone, UploadItemCard, ProgressBar
+  context/AuthContext.tsx Firebase auth state, exposed via useAuth()
+  hooks/useAuth.ts
+  hooks/useImageUpload.ts  Upload list state: add/validate/upload/delete
+  lib/firebase/          client.ts (init) + auth.ts (sign-in/out helpers)
+  lib/cloudinary/        validate.ts, upload.ts, delete.ts (client-safe),
+                          server.ts (Admin SDK — server-only, has the secret)
+  config/brand.ts        Brand colors + the full V1.0 nav/feature map
+  types/user.ts, types/upload.ts
+```
+
+## Deploy to Vercel
+
+1. Push this project to a GitHub repo (Vercel deploys from git).
+2. Go to https://vercel.com/new and import that repo.
+3. Framework preset: Vercel auto-detects **Next.js** — leave build command
+   as `next build` and output as default.
+4. Before the first deploy, add environment variables under
+   **Project Settings → Environment Variables** (copy every key from
+   `.env.local.example` that you've filled in — at minimum the six
+   `NEXT_PUBLIC_FIREBASE_*` values and the four Cloudinary values).
+   Add them to all three environments (Production, Preview, Development).
+   `/api/uploads/delete` runs as a Vercel serverless function
+   automatically — no extra config needed.
+5. Click **Deploy**. Vercel builds and gives you a `*.vercel.app` URL.
+6. Back in the Firebase console → Authentication → Settings →
+   **Authorized domains** → add your `*.vercel.app` domain (and your
+   custom domain later) or Google sign-in will fail on the deployed site
+   with an `auth/unauthorized-domain` error.
+7. For later phases: once Cloudinary/Supabase/OpenAI keys exist, add them
+   the same way before redeploying — no code changes needed, the env
+   vars are already wired to be read from `process.env`.
+
+Redeploying after future phases is automatic: every push to your main
+branch triggers a new Vercel deployment.
+
+## Phase 1 Test
+
+Run through this after `npm install`:
+
+1. `npm install` completes with no errors
+2. `npm run build` completes with no type/lint errors
+3. `npm run dev` → open `http://localhost:3000` and check the landing
+   page: Navbar (Login / Start Free), Hero, Features, How It Works,
+   Pricing (Coming Soon), FAQ accordion, Footer all render
+4. Click each Navbar anchor link (Features / How it works / Pricing /
+   FAQ) — page smooth-scrolls to that section
+5. On Pricing, submit an email in "Notify me" — it shows a confirmation
+   message (UI only for now; not yet wired to a real waitlist backend)
+6. Click **Start Free** or **Login** → **Continue with Google** → lands
+   on `/dashboard` signed in
+7. Refresh `/dashboard` — session persists (no bounce to `/login`)
+8. On `/dashboard`, check all 5 widgets render as cards: Upload Product
+   (drop-zone + disabled button), Recent Projects (empty state), AI
+   Credits (shows "0 credits used"), Download History (empty state),
+   Profile (your avatar, name, email, "Google account" badge, join date)
+9. Resize to phone width — Navbar collapses to a hamburger menu, the
+   dashboard sidebar becomes a drawer + bottom nav bar, and the widget
+   grid stacks to a single column
+10. Sign out from the profile menu (top right) or the Profile widget's
+    Sign out button → redirected to `/login`
+11. Visit `/dashboard` directly while signed out → redirected to `/login`
+    (route protection works)
+
+Report back what breaks, if anything, and I'll fix it before moving on.
+
+## Phase 2 Test
+
+Run through this after filling in the four Cloudinary env vars:
+
+1. On the dashboard's **Upload Product** card, drag a JPG/PNG/WebP onto
+   the drop zone — a thumbnail preview and a progress bar appear
+   immediately, then a green "Uploaded" badge
+2. Click "View on Cloudinary" on an uploaded file — it opens the real
+   image at a `res.cloudinary.com` URL
+3. Click to browse instead of dragging — same result
+4. Try uploading a `.pdf` or `.gif` — it's rejected inline with "Unsupported
+   file type," no network request is made
+5. Try uploading a file larger than 8MB — rejected inline with a
+   "File is too large" message
+6. Drag in 2–3 valid files at once — each gets its own row with its own
+   progress bar, uploading independently
+7. Click delete (trash icon) on a file **while it's still uploading** —
+   the upload stops and the row disappears
+8. Click delete on a file that finished uploading — it briefly shows
+   "Deleting," then disappears; check Cloudinary's Media Library to
+   confirm it's actually gone, not just hidden in the UI
+9. Refresh the page — the upload list is empty again (expected: nothing
+   is persisted yet, see "Not included yet" under Phase 2 above)
+10. Resize to phone width — the widget and its file rows stay readable
+    and don't overflow horizontally
+
+Report back what breaks, and I'll fix it before we wire up Supabase
+persistence and move on to Phase 3.
+
+## Roadmap (next phases)
+
+- **Phase 2 (in progress):** ~~Product image upload → Cloudinary~~ done;
+  still to do: Supabase schema so uploads persist as real projects tied
+  to a user
+- **Phase 3:** AI Prompt Generator + Script Generator (OpenAI)
+- **Phase 4:** Caption Generator + WhatsApp Copy + Hashtag Generator
+- **Phase 5:** Download Assets (zip/export), polish, Kling API groundwork
+
+## Brand colors
+
+| Token | Hex |
+|---|---|
+| Primary | `#344CB7` |
+| Secondary | `#577BC1` |
+| Accent | `#0EA5E9` |
+| Dark | `#000957` |
+
+import type { Config } from "tailwindcss";
+
+const config: Config = {
+  darkMode: "class",
+  content: [
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          primary: "#344CB7",
+          secondary: "#577BC1",
+          accent: "#0EA5E9",
+          dark: "#000957",
+        },
+      },
+      backgroundImage: {
+        "brand-gradient":
+          "linear-gradient(135deg, #000957 0%, #344CB7 55%, #0EA5E9 100%)",
+      },
+      fontFamily: {
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+      },
+      animation: {
+        "fade-in": "fadeIn 0.4s ease-in-out",
+        "fade-in-up": "fadeInUp 0.6s ease-out both",
+        float: "float 6s ease-in-out infinite",
+      },
+      keyframes: {
+        fadeIn: {
+          "0%": { opacity: "0", transform: "translateY(6px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        fadeInUp: {
+          "0%": { opacity: "0", transform: "translateY(16px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-12px)" },
+        },
+      },
+    },
+  },
+  plugins: [],
+};
+
+export default config;
+
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+
+# ------------------------------------------------------------------
+# Offer For You - BNK AI Ad Studio
+# Copy this file to .env.local and fill in real values.
+# .env.local is git-ignored and must never be committed.
+# ------------------------------------------------------------------
+
+# --- Firebase Authentication (Phase 1 - required now) --------------
+# Get these from Firebase Console > Project Settings > General > Your apps > Web app
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+
+# --- Supabase Database (Phase 2+ - reserved, not used yet) ---------
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# --- Cloudinary Storage (Phase 2 - required now for image upload) --
+# Cloud name is not secret - it's used both in the browser (to upload
+# directly to Cloudinary) and on the server (to delete assets).
+# Get it from Cloudinary Console > Dashboard > "Cloud name".
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
+# An UNSIGNED upload preset - create it in Console > Settings > Upload >
+# Upload presets. See the README's "Cloudinary Console Setup" section.
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=
+# Server-only - used by the /api/uploads/delete route to remove assets.
+# Never expose these with a NEXT_PUBLIC_ prefix.
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+# --- OpenAI API (Phase 3+ - reserved, not used yet) -----------------
+OPENAI_API_KEY=
+
+# --- Kling API (future integration - reserved, not used yet) -------
+KLING_API_KEY=
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env files
+.env
+.env*.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+import { FlatCompat } from "@eslint/eslintrc";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+const eslintConfig = [
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    ignores: [".next/**", "node_modules/**", "out/**"],
+  },
+];
+
+export default eslintConfig;
+
