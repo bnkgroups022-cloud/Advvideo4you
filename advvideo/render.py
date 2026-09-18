@@ -80,7 +80,7 @@ def final_cmd(video_loop_src, voice_wav, music_wav, out_mp4, captions, total=DUR
     """Full render. ``video_loop_src`` is the ping-pong clip (looped) or a full-length fallback clip."""
     graph = video_graph(captions, total) + ";" + audio_graph(total)
     return [
-        ffmpeg, "-y", "-hide_banner", "-loglevel", "error", "-stats",
+        ffmpeg, "-y", "-hide_banner", "-loglevel", "error", "-nostats",
         "-stream_loop", "-1", "-i", video_loop_src,
         "-i", voice_wav,
         "-i", music_wav,

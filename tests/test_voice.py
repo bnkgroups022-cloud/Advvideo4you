@@ -97,3 +97,9 @@ def test_wav_helpers_roundtrip():
         assert abs(voice.wav_duration(p) - 0.5) < 0.001
         samples, rate = voice.read_wav_mono(p)
         assert rate == 22050 and len(samples) == 11025
+
+
+def test_sequential_plan_is_back_to_back_without_overlap():
+    plan = voice.sequential_plan([2.0, 3.0, 4.0])
+    assert plan["starts"] == [0.35, 2.65, 5.95] and not plan["fits"] and plan["speedup"] == 1.0
+    assert all(plan["starts"][i + 1] >= plan["ends"][i] for i in range(2))

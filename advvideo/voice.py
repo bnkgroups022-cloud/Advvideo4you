@@ -114,6 +114,15 @@ def plan_timeline(durations, total=15.0, lead=0.35, tail=0.9, min_gap=0.30, max_
             "speech_seconds": round(sum(scaled), 3)}
 
 
+def sequential_plan(durations, total=15.0, lead=0.35, gap=0.30):
+    """Last resort when nothing fits: play everything back to back at normal speed (the end may be cut off)."""
+    starts, ends, t = [], [], lead
+    for d in durations:
+        starts.append(round(t, 3))
+        ends.append(round(t + d, 3))
+        t += d + gap
+    return {"starts": starts, "ends": ends, "gap": gap, "speedup": 1.0, "fits": False, "speech_seconds": round(sum(durations), 3)}
+
 def length_scale_for(speedup):
     """Piper length_scale for a wanted speed-up (< 1 is faster), never absurdly fast."""
     return max(MIN_LENGTH_SCALE, round(1.0 / max(speedup, 1.0), 3))
