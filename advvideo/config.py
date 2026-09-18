@@ -145,3 +145,34 @@ def slugify(name):
     text = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii").lower()
     text = re.sub(r"[^a-z0-9]+", "-", text).strip("-")
     return text[:40] or "product"
+
+
+def classify_uploads(files):
+    """Sort what the user uploaded in Colab: the launch file (JSON) and/or a product photo. ``files``: {name: bytes}."""
+    launch, image, ignored = None, None, []
+    for name, blob in files.items():
+        if launch is None and (name.lower().endswith(".json") or blob.lstrip()[:1] == b"{"):
+            launch = blob
+        elif image is None and sniff_image(blob) is not None:
+            image = (name, blob)
+        else:
+            ignored.append(name)
+    return {"launch": launch, "image": image, "ignored": ignored}
+
+
+def prompt_settings(ask=input, say=print):
+    """Fallback when no launch file was uploaded: ask the three questions in the notebook (Enter accepts the default)."""
+    name = ""
+    for _ in range(3):
+        name = (ask("Product name: ") or "").strip()
+        if name:
+            break
+        say("A product name is needed.")
+    language = ""
+    for _ in range(3):
+        language = ((ask("Language - en, hi or bn [en]: ") or "en").strip().lower())
+        if language in LANGUAGES:
+            break
+        say("Please type en, hi or bn.")
+    cta = (ask("Call to action [%s]: " % DEFAULT_CTA.get(language, "Order now")) or "").strip()
+    return validate_fields(name, language, cta)

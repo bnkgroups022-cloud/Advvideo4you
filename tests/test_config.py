@@ -90,3 +90,26 @@ def test_slugify():
     assert config.slugify("Aroma Tea & Co.") == "aroma-tea-co"
     assert config.slugify("स्वाद") == "product"
     assert len(config.slugify("a" * 100)) == 40
+
+
+def test_classify_uploads():
+    png = tiny_png()
+    launch = config.build_launch("A", "en", "c", png).encode("utf-8")
+    found = config.classify_uploads({"photo.png": png, "advvideo-launch.json": launch, "notes.txt": b"hello"})
+    assert found["launch"] == launch and found["image"] == ("photo.png", png) and found["ignored"] == ["notes.txt"]
+    only_image = config.classify_uploads({"x.jpg": b"\xff\xd8\xff\xe0abc"})
+    assert only_image["launch"] is None and only_image["image"][0] == "x.jpg"
+    renamed = config.classify_uploads({"launch (1).txt": b'  {"version": 1}'})
+    assert renamed["launch"] is not None
+    assert config.classify_uploads({}) == {"launch": None, "image": None, "ignored": []}
+
+
+def test_prompt_settings_uses_defaults_and_retries():
+    answers = iter(["", "Aroma Tea", "xx", "hi", ""])
+    said = []
+    cfg = config.prompt_settings(ask=lambda prompt: next(answers), say=said.append)
+    assert cfg["product_name"] == "Aroma Tea" and cfg["language"] == "hi" and cfg["cta"] == config.DEFAULT_CTA["hi"]
+    assert len(said) == 2
+    answers = iter(["Tea", "", "Buy today"])
+    cfg = config.prompt_settings(ask=lambda prompt: next(answers), say=said.append)
+    assert cfg["language"] == "en" and cfg["cta"] == "Buy today"
