@@ -125,6 +125,8 @@
     .steps p { color: var(--muted); font-size: .94rem; }
     .path { display: inline-block; margin-top: 6px; padding: 4px 10px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); color: var(--fg); font-size: .88rem; font-weight: 600; }
     .steps .btn { margin-top: 10px; }
+    .m-actions { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 24px 4px; }
+    .m-actions .btn { flex: 1 1 auto; }
     .m-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 24px 22px; color: var(--muted); font-size: .88rem; }
 
     @media (max-width: 900px) {
@@ -303,51 +305,55 @@
     </div>
   </footer>
 
-  <dialog id="start" aria-labelledby="start-title">
+  <dialog id="start" aria-labelledby="start-title" aria-describedby="start-desc">
     <div class="m-head">
       <div>
         <h2 id="start-title">Start free in 5 steps</h2>
-        <p>Everything runs in your own Google Colab session.</p>
+        <p id="start-desc">Everything runs in your own Google Colab session.</p>
       </div>
-      <button class="icon-btn" type="button" data-close aria-label="Close">
+      <button class="icon-btn" type="button" data-close aria-label="Close dialog">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
     </div>
     <ol class="steps">
       <li>
         <div>
-          <h3>Open Colab</h3>
-          <p>Open the notebook and sign in with your Google account if asked.</p>
-          <a class="btn primary small" href="https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Wan2.1_VACE_1.3B_T4_Colab.ipynb" target="_blank" rel="noopener">Open notebook in Colab</a>
+          <h3>Google Colab account required</h3>
+          <p>Sign in with any Google account when Colab asks. Colab and its T4 GPU are free.</p>
         </div>
       </li>
       <li>
         <div>
-          <h3>Pick the free GPU</h3>
-          <p>In Colab, open the Runtime menu and choose the T4.</p>
-          <span class="path">Runtime &rarr; Change runtime type &rarr; T4 GPU &rarr; Save</span>
+          <h3>Use Runtime &rarr; Change runtime type</h3>
+          <p>Open the Runtime menu at the top of the notebook.</p>
+          <span class="path">Runtime &rarr; Change runtime type</span>
         </div>
       </li>
       <li>
         <div>
-          <h3>Run All</h3>
-          <p>Start everything with one command. The shortcut is Ctrl+F9 (Cmd+F9 on Mac).</p>
+          <h3>Select GPU &rarr; T4</h3>
+          <p>Choose the T4 GPU as the hardware accelerator, then press Save.</p>
+          <span class="path">Hardware accelerator &rarr; T4 GPU &rarr; Save</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h3>Click Runtime &rarr; Run all</h3>
+          <p>This starts everything. The shortcut is Ctrl+F9 (Cmd+F9 on Mac).</p>
           <span class="path">Runtime &rarr; Run all</span>
         </div>
       </li>
       <li>
         <div>
-          <h3>Upload your product photo</h3>
-          <p>When the <strong>Choose Files</strong> button appears under the cell, pick one JPG or PNG photo. This is the only step that needs you.</p>
-        </div>
-      </li>
-      <li>
-        <div>
-          <h3>Download the MP4</h3>
-          <p><code>output.mp4</code> downloads automatically when generation finishes. If your browser blocks it, allow downloads for colab.research.google.com and it will appear.</p>
+          <h3>Upload one product photo</h3>
+          <p>When the <strong>Choose Files</strong> button appears under the cell, pick one JPG or PNG photo. <code>output.mp4</code> then downloads automatically when generation finishes.</p>
         </div>
       </li>
     </ol>
+    <div class="m-actions">
+      <a class="btn primary" data-colab href="https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Wan2.1_VACE_1.3B_T4_Colab.ipynb" target="_blank" rel="noopener">Open Colab Notebook</a>
+      <a class="btn" href="https://github.com/bnkgroups022-cloud/Advvideo4you" target="_blank" rel="noopener">View GitHub</a>
+    </div>
     <div class="m-foot">
       <span>The first run also downloads about 19&nbsp;GB of model files.</span>
       <button class="btn small" type="button" data-close>Close</button>
@@ -357,20 +363,43 @@
   <script>
     (function () {
       var dlg = document.getElementById("start");
-      function open() {
+      var lastTrigger = null;
+      var downOutside = false;
+
+      function outside(e) {
+        var r = dlg.getBoundingClientRect();
+        return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+      }
+      function openModal(trigger) {
+        if (trigger) lastTrigger = trigger;
         if (typeof dlg.showModal === "function") { if (!dlg.open) dlg.showModal(); } else { dlg.setAttribute("open", ""); }
       }
-      function close() {
-        if (typeof dlg.close === "function") { dlg.close(); } else { dlg.removeAttribute("open"); }
+      function closeModal() {
+        if (typeof dlg.close === "function") { if (dlg.open) dlg.close(); } else { dlg.removeAttribute("open"); }
+        afterClose();
       }
-      Array.prototype.forEach.call(document.querySelectorAll("[data-start]"), function (b) { b.addEventListener("click", open); });
-      Array.prototype.forEach.call(dlg.querySelectorAll("[data-close]"), function (b) { b.addEventListener("click", close); });
-      dlg.addEventListener("click", function (e) { if (e.target === dlg) close(); });
-      if (location.hash === "#start") open();
-      window.addEventListener("hashchange", function () { if (location.hash === "#start") open(); });
-      dlg.addEventListener("close", function () {
+      function afterClose() {
         if (location.hash === "#start" && history.replaceState) history.replaceState(null, "", location.pathname + location.search);
+        if (lastTrigger && document.contains(lastTrigger)) { lastTrigger.focus(); }
+        lastTrigger = null;
+      }
+
+      Array.prototype.forEach.call(document.querySelectorAll("[data-start]"), function (b) {
+        b.addEventListener("click", function () { openModal(b); });
       });
+      Array.prototype.forEach.call(dlg.querySelectorAll("[data-close]"), function (b) { b.addEventListener("click", closeModal); });
+      dlg.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") { e.preventDefault(); closeModal(); }
+      });
+      dlg.addEventListener("cancel", function (e) { e.preventDefault(); closeModal(); });
+      dlg.addEventListener("close", afterClose);
+      dlg.addEventListener("mousedown", function (e) { downOutside = outside(e); });
+      dlg.addEventListener("click", function (e) {
+        if (downOutside && outside(e)) closeModal();
+        downOutside = false;
+      });
+      if (location.hash === "#start") openModal(null);
+      window.addEventListener("hashchange", function () { if (location.hash === "#start") openModal(null); });
 
       var root = document.documentElement;
       document.getElementById("theme").addEventListener("click", function () {
