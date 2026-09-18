@@ -367,6 +367,10 @@
       Array.prototype.forEach.call(dlg.querySelectorAll("[data-close]"), function (b) { b.addEventListener("click", close); });
       dlg.addEventListener("click", function (e) { if (e.target === dlg) close(); });
       if (location.hash === "#start") open();
+      window.addEventListener("hashchange", function () { if (location.hash === "#start") open(); });
+      dlg.addEventListener("close", function () {
+        if (location.hash === "#start" && history.replaceState) history.replaceState(null, "", location.pathname + location.search);
+      });
 
       var root = document.documentElement;
       document.getElementById("theme").addEventListener("click", function () {
