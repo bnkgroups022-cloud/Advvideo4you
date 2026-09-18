@@ -141,8 +141,10 @@
     }
     @media (max-width: 520px) {
       .grid.four { grid-template-columns: 1fr; }
+      .bar { gap: 10px; }
       .bar .btn.small { padding: 8px 12px; }
     }
+    @media (max-width: 400px) { .brand-name { display: none; } }
     @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
   </style>
 </head>
@@ -153,7 +155,7 @@
     <div class="wrap bar">
       <a class="brand" href="/" aria-label="Advvideo4you home">
         <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#2b59ff"/><path d="M12 9.5v13l11-6.5z" fill="#fff"/></svg>
-        Advvideo4you
+        <span class="brand-name">Advvideo4you</span>
       </a>
       <nav aria-label="Primary">
         <a href="#how">How it works</a>
