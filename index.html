@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Advvideo4you</title>
+  <meta name="description" content="Advvideo4you: turn a product photo into a 9:16 ad video with Wan on a free Google Colab T4.">
+  <style>
+    :root { --bg: #ffffff; --fg: #14171f; --muted: #5b6474; --line: #dfe3ea; --accent: #2b59ff; --accent-fg: #ffffff; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0e1116; --fg: #eef1f6; --muted: #98a2b3; --line: #262c37; --accent: #6b8cff; --accent-fg: #0e1116; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 640px; margin: 0 auto; padding: 72px 16px; }
+    h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 12px; }
+    p { color: var(--muted); margin: 0 0 24px; }
+    ul { padding-left: 20px; margin: 0 0 32px; color: var(--muted); }
+    li { margin-bottom: 6px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    a.btn { display: inline-block; padding: 10px 18px; border-radius: 8px; border: 1px solid var(--line); color: var(--fg); text-decoration: none; font-weight: 600; }
+    a.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+    a.btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Advvideo4you</h1>
+    <p>Turn one product photo into a 9:16 vertical ad video. The generator is a single Google Colab notebook that runs on the free T4 GPU.</p>
+    <ul>
+      <li>Model: Wan2.1 VACE-1.3B, run through the official Wan-Video/Wan2.1 repository</li>
+      <li>Output: 480x832 MP4, downloaded automatically</li>
+      <li>One image upload, then Runtime &rarr; Run all</li>
+    </ul>
+    <div class="actions">
+      <a class="btn primary" href="https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Wan2.1_VACE_1.3B_T4_Colab.ipynb">Open the Colab notebook</a>
+      <a class="btn" href="https://github.com/bnkgroups022-cloud/Advvideo4you">View on GitHub</a>
+    </div>
+  </main>
+</body>
+</html>
