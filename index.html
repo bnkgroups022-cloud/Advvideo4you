@@ -114,12 +114,16 @@
     footer a { color: var(--muted); }
     footer a:hover { color: var(--fg); }
 
-    dialog { width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow: auto; padding: 0; border: 1px solid var(--line); border-radius: 18px; background: var(--bg); color: var(--fg); box-shadow: var(--shadow); }
+    /* Modal: fixed-size container = sticky header + scrolling body + pinned footer. Only .m-body scrolls. */
+    dialog { width: calc(100vw - 32px); max-width: 720px; height: min(720px, calc(100vh - 32px)); height: min(720px, calc(100dvh - 32px)); max-height: none; overflow: hidden; padding: 0; border: 1px solid var(--line); border-radius: 18px; background: var(--bg); color: var(--fg); box-shadow: var(--shadow); }
+    dialog[open] { display: flex; flex-direction: column; }
     dialog::backdrop { background: rgba(6, 9, 16, .6); }
-    .m-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 22px 24px 8px; }
+    .m-head { flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 22px 24px 16px; border-bottom: 1px solid var(--line); }
+    .m-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+    .m-footer { flex: 0 0 auto; padding: 16px 24px 20px; padding-bottom: max(20px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--bg); }
     .m-head h2 { font-size: 1.4rem; }
     .m-head p { color: var(--muted); font-size: .95rem; margin-top: 4px; }
-    .steps { list-style: none; counter-reset: s; margin: 0; padding: 12px 24px 4px; display: grid; gap: 16px; }
+    .steps { list-style: none; counter-reset: s; margin: 0; padding: 18px 24px 4px; display: grid; gap: 16px; }
     .steps li { counter-increment: s; display: grid; grid-template-columns: 34px 1fr; gap: 14px; }
     .steps li::before { content: counter(s); width: 34px; height: 34px; border-radius: 10px; background: var(--accent); color: var(--accent-fg); display: grid; place-items: center; font-weight: 800; }
     .steps h3 { font-size: 1rem; margin-bottom: 2px; }
@@ -129,14 +133,19 @@
     .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 40; width: max-content; max-width: min(92vw, 520px); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 12px 16px; border-radius: 12px; background: var(--fg); color: var(--bg); box-shadow: var(--shadow); font-size: .94rem; }
     .toast[hidden] { display: none; }
     .toast a { color: inherit; font-weight: 700; }
-    .status { margin: 8px 24px 0; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--fg); font-size: .92rem; }
+    .status { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--fg); font-size: .92rem; }
     .status:empty { display: none; }
     .status a { color: var(--fg); font-weight: 700; }
     .prompt-box { display: block; width: calc(100% - 48px); margin: 10px 24px 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font: inherit; font-size: .9rem; line-height: 1.5; resize: vertical; }
     .prompt-box[hidden] { display: none; }
     .m-hint { margin: 10px 24px 0; color: var(--muted); font-size: .88rem; }
-    .m-actions { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 24px 4px; }
-    .m-actions .btn { flex: 0 1 auto; }
+    .m-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .m-actions .btn { width: 100%; min-height: 48px; }
+    .m-actions #copy-prompt { grid-column: 1 / -1; }
+    @media (max-width: 767.98px) {
+      .m-actions { grid-template-columns: 1fr; }
+      .m-actions .btn { min-height: 52px; }
+    }
     .m-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 24px 22px; color: var(--muted); font-size: .88rem; }
 
     @media (max-width: 900px) {
@@ -157,7 +166,6 @@
     @media (max-width: 520px) {
       .grid.four { grid-template-columns: 1fr; }
       .bar { column-gap: 10px; }
-      .m-actions .btn { flex: 1 1 auto; }
       .bar .btn.small { padding: 8px 12px; }
     }
     @media (max-width: 400px) { .brand-name { display: none; } }
@@ -331,6 +339,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
     </div>
+    <div class="m-body">
     <ol class="steps">
       <li>
         <div>
@@ -366,17 +375,20 @@
         </div>
       </li>
     </ol>
-    <div class="m-actions">
-      <a class="btn primary" data-colab href="https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Wan2.1_VACE_1.3B_T4_Colab.ipynb" target="_blank" rel="noopener">Open Colab Notebook</a>
-      <a class="btn" href="https://github.com/bnkgroups022-cloud/Advvideo4you" target="_blank" rel="noopener">View GitHub</a>
-      <button class="btn" type="button" id="copy-prompt">Copy Prompt</button>
-    </div>
     <textarea id="prompt-text" class="prompt-box" readonly rows="5" aria-label="Production prompt" hidden>Cinematic vertical product advertisement. The product from the photo stays sharp, centered and unchanged in shape and color. Slow smooth camera push-in with subtle parallax, soft studio key light with a gentle rim highlight, clean background with light bokeh, realistic reflections, natural subtle motion, premium commercial look, high detail.</textarea>
     <p class="m-hint">Tip: paste the copied prompt into the <code>PROMPT</code> field at the top of the notebook cell.</p>
-    <div id="m-status" class="status" role="status" aria-live="polite"></div>
     <div class="m-foot">
       <span>The first run also downloads about 19&nbsp;GB of model files.</span>
       <button class="btn small" type="button" data-close>Close</button>
+    </div>
+    </div>
+    <div class="m-footer">
+      <div id="m-status" class="status" role="status" aria-live="polite"></div>
+      <div class="m-actions">
+        <a class="btn primary" data-colab href="https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Wan2.1_VACE_1.3B_T4_Colab.ipynb" target="_blank" rel="noopener">Open Colab Notebook</a>
+        <a class="btn" href="https://github.com/bnkgroups022-cloud/Advvideo4you" target="_blank" rel="noopener">View GitHub</a>
+        <button class="btn" type="button" id="copy-prompt">Copy Prompt</button>
+      </div>
     </div>
   </dialog>
 
