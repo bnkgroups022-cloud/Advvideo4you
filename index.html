@@ -131,6 +131,9 @@
     .status { margin: 8px 24px 0; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--fg); font-size: .92rem; }
     .status:empty { display: none; }
     .status a { color: var(--fg); font-weight: 700; }
+    .prompt-box { display: block; width: calc(100% - 48px); margin: 10px 24px 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font: inherit; font-size: .9rem; line-height: 1.5; resize: vertical; }
+    .prompt-box[hidden] { display: none; }
+    .m-hint { margin: 10px 24px 0; color: var(--muted); font-size: .88rem; }
     .m-actions { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 24px 4px; }
     .m-actions .btn { flex: 1 1 auto; }
     .m-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 24px 22px; color: var(--muted); font-size: .88rem; }
@@ -361,7 +364,10 @@
     <div class="m-actions">
       <a class="btn primary" data-colab href="https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Wan2.1_VACE_1.3B_T4_Colab.ipynb" target="_blank" rel="noopener">Open Colab Notebook</a>
       <a class="btn" href="https://github.com/bnkgroups022-cloud/Advvideo4you" target="_blank" rel="noopener">View GitHub</a>
+      <button class="btn" type="button" id="copy-prompt">Copy Prompt</button>
     </div>
+    <textarea id="prompt-text" class="prompt-box" readonly rows="5" aria-label="Production prompt" hidden>Cinematic vertical product advertisement. The product from the photo stays sharp, centered and unchanged in shape and color. Slow smooth camera push-in with subtle parallax, soft studio key light with a gentle rim highlight, clean background with light bokeh, realistic reflections, natural subtle motion, premium commercial look, high detail.</textarea>
+    <p class="m-hint">Tip: paste the copied prompt into the <code>PROMPT</code> field at the top of the notebook cell.</p>
     <div id="m-status" class="status" role="status" aria-live="polite"></div>
     <div class="m-foot">
       <span>The first run also downloads about 19&nbsp;GB of model files.</span>
@@ -435,6 +441,29 @@
             { href: NOTEBOOK_URL, label: "Open notebook here", sameTab: true });
         }
       }
+      var promptBox = document.getElementById("prompt-text");
+      var copyBtn = document.getElementById("copy-prompt");
+      function copyPrompt() {
+        var text = promptBox.value;
+        function done() { promptBox.hidden = true; notify("✓ Prompt copied."); }
+        function manual() {
+          // Fallback 1: select the text and use the legacy copy command. Fallback 2: leave it selected for Ctrl+C.
+          promptBox.hidden = false;
+          promptBox.focus();
+          promptBox.select();
+          var copied = false;
+          try { copied = document.execCommand("copy"); } catch (err) { copied = false; }
+          if (copied) { done(); copyBtn.focus(); return; }
+          notify("Copy was blocked by your browser. The prompt is selected above: press Ctrl+C (Cmd+C on Mac) to copy it.");
+          promptBox.scrollIntoView({ block: "nearest" });
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done, manual);
+        } else {
+          manual();
+        }
+      }
+      copyBtn.addEventListener("click", copyPrompt);
       Array.prototype.forEach.call(document.querySelectorAll("[data-colab]"), function (a) { a.addEventListener("click", openColab); });
       checkNotebook();
 
