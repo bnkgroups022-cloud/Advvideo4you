@@ -136,7 +136,7 @@
     .prompt-box[hidden] { display: none; }
     .m-hint { margin: 10px 24px 0; color: var(--muted); font-size: .88rem; }
     .m-actions { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 24px 4px; }
-    .m-actions .btn { flex: 1 1 auto; }
+    .m-actions .btn { flex: 0 1 auto; }
     .m-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 24px 22px; color: var(--muted); font-size: .88rem; }
 
     @media (max-width: 900px) {
@@ -144,7 +144,10 @@
       .grid.three { grid-template-columns: 1fr; }
     }
     @media (max-width: 760px) {
-      nav { display: none; }
+      html { scroll-padding-top: 104px; }
+      .bar { flex-wrap: wrap; height: auto; padding-top: 8px; row-gap: 0; }
+      nav { order: 3; flex: 1 0 100%; margin: 0; justify-content: space-around; }
+      nav a { padding: 8px 4px; }
       .hero { padding: 40px 0 32px; }
       .hero-grid { grid-template-columns: 1fr; gap: 32px; }
       .phone { order: -1; width: min(180px, 50vw); }
@@ -153,7 +156,8 @@
     }
     @media (max-width: 520px) {
       .grid.four { grid-template-columns: 1fr; }
-      .bar { gap: 10px; }
+      .bar { column-gap: 10px; }
+      .m-actions .btn { flex: 1 1 auto; }
       .bar .btn.small { padding: 8px 12px; }
     }
     @media (max-width: 400px) { .brand-name { display: none; } }
