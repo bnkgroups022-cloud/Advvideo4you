@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Advvideo4you – Turn a product photo into a 9:16 ad video, free</title>
-  <meta name="description" content="Upload one product photo, press Run all, and download a vertical 9:16 MP4 ad. Runs on a free Google Colab T4 GPU with the Wan VACE 1.3B model. No server, no cost.">
+  <meta name="description" content="One product photo in, a 15-second vertical 9:16 ad out: AI-written script, Hindi, English or Bangla voice-over, animated captions and music. Runs on a free Google Colab T4 GPU. No server, no cost.">
   <meta name="theme-color" content="#2b59ff">
   <link rel="canonical" href="https://advvideo4you.vercel.app/">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -13,7 +13,7 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Advvideo4you">
   <meta property="og:title" content="Advvideo4you – Turn a product photo into a 9:16 ad video, free">
-  <meta property="og:description" content="Upload one photo, press Run all, download a vertical MP4. Runs on a free Google Colab T4 GPU.">
+  <meta property="og:description" content="One photo in, a 15-second vertical ad out: AI script, voice-over, captions and music. Free on a Google Colab T4 GPU.">
   <meta property="og:url" content="https://advvideo4you.vercel.app/">
   <meta property="og:image" content="https://advvideo4you.vercel.app/og.png">
   <meta property="og:image:width" content="1200">
@@ -21,7 +21,7 @@
   <meta property="og:image:alt" content="Advvideo4you: turn a product photo into a 9:16 ad video, free on Google Colab">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Advvideo4you – Turn a product photo into a 9:16 ad video, free">
-  <meta name="twitter:description" content="Upload one photo, press Run all, download a vertical MP4. Runs on a free Google Colab T4 GPU.">
+  <meta name="twitter:description" content="One photo in, a 15-second vertical ad out: AI script, voice-over, captions and music. Free on a Google Colab T4 GPU.">
   <meta name="twitter:image" content="https://advvideo4you.vercel.app/og.png">
   <script>
     try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}
@@ -29,17 +29,17 @@
   <style>
     :root {
       --bg: #ffffff; --surface: #f5f7fb; --fg: #12151c; --muted: #4d5666; --line: #dde2ec;
-      --accent: #2b59ff; --accent-fg: #ffffff; --accent-soft: #e8edff; --shadow: 0 10px 30px rgba(20, 30, 70, .10);
+      --accent: #2b59ff; --accent-fg: #ffffff; --accent-soft: #e8edff; --danger: #b3261e; --shadow: 0 10px 30px rgba(20, 30, 70, .10);
     }
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
         --bg: #0d1017; --surface: #151a24; --fg: #eef1f7; --muted: #a3adbf; --line: #262d3b;
-        --accent: #7b98ff; --accent-fg: #0d1017; --accent-soft: #1b2340; --shadow: 0 10px 30px rgba(0, 0, 0, .45);
+        --accent: #7b98ff; --accent-fg: #0d1017; --accent-soft: #1b2340; --danger: #ff8a80; --shadow: 0 10px 30px rgba(0, 0, 0, .45);
       }
     }
     :root[data-theme="dark"] {
       --bg: #0d1017; --surface: #151a24; --fg: #eef1f7; --muted: #a3adbf; --line: #262d3b;
-      --accent: #7b98ff; --accent-fg: #0d1017; --accent-soft: #1b2340; --shadow: 0 10px 30px rgba(0, 0, 0, .45);
+      --accent: #7b98ff; --accent-fg: #0d1017; --accent-soft: #1b2340; --danger: #ff8a80; --shadow: 0 10px 30px rgba(0, 0, 0, .45);
     }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; scroll-padding-top: 76px; }
@@ -123,26 +123,36 @@
     .m-footer { flex: 0 0 auto; padding: 16px 24px 20px; padding-bottom: max(20px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--bg); }
     .m-head h2 { font-size: 1.4rem; }
     .m-head p { color: var(--muted); font-size: .95rem; margin-top: 4px; }
-    .steps { list-style: none; counter-reset: s; margin: 0; padding: 18px 24px 4px; display: grid; gap: 16px; }
-    .steps li { counter-increment: s; display: grid; grid-template-columns: 34px 1fr; gap: 14px; }
-    .steps li::before { content: counter(s); width: 34px; height: 34px; border-radius: 10px; background: var(--accent); color: var(--accent-fg); display: grid; place-items: center; font-weight: 800; }
-    .steps h3 { font-size: 1rem; margin-bottom: 2px; }
-    .steps p { color: var(--muted); font-size: .94rem; }
-    .path { display: inline-block; margin-top: 6px; padding: 4px 10px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); color: var(--fg); font-size: .88rem; font-weight: 600; }
-    .steps .btn { margin-top: 10px; }
+    .lf { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 18px 24px 4px; }
+    .lf .field, .row2 > * { min-width: 0; }
+    .field label { display: block; margin-bottom: 6px; font-weight: 600; font-size: .95rem; }
+    .req { margin-left: 6px; color: var(--muted); font-weight: 500; font-size: .8rem; }
+    .lf input[type="text"], .lf select, .lf textarea { width: 100%; min-height: 44px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: inherit; }
+    .lf textarea { min-height: 88px; resize: vertical; line-height: 1.5; }
+    .lf input[type="file"] { flex: 1 1 auto; min-width: 0; padding: 8px 0; color: var(--muted); font: inherit; font-size: .92rem; }
+    .lf input[type="file"]::file-selector-button { margin-right: 12px; min-height: 40px; padding: 8px 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font: inherit; font-weight: 600; cursor: pointer; }
+    .lf [aria-invalid="true"] { border-color: var(--danger); }
+    .photo-row { display: flex; align-items: center; gap: 12px; }
+    .thumb img { display: block; width: 56px; height: 56px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); }
+    .thumb[hidden] { display: none; }
+    .row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+    .help { margin-top: 6px; color: var(--muted); font-size: .85rem; }
+    .err { margin-top: 6px; color: var(--danger); font-size: .88rem; font-weight: 600; }
+    .err[hidden], .field[hidden] { display: none; }
+    .next { margin: 18px 24px 0; padding-left: 20px; color: var(--muted); font-size: .92rem; }
+    .next li { margin-bottom: 6px; }
+    .next strong, .next code { color: var(--fg); }
     .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 40; width: max-content; max-width: min(92vw, 520px); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 12px 16px; border-radius: 12px; background: var(--fg); color: var(--bg); box-shadow: var(--shadow); font-size: .94rem; }
     .toast[hidden] { display: none; }
     .toast a { color: inherit; font-weight: 700; }
     .status { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--fg); font-size: .92rem; }
     .status:empty { display: none; }
     .status a { color: var(--fg); font-weight: 700; }
-    .prompt-box { display: block; width: calc(100% - 48px); margin: 10px 24px 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font: inherit; font-size: .9rem; line-height: 1.5; resize: vertical; }
-    .prompt-box[hidden] { display: none; }
-    .m-hint { margin: 10px 24px 0; color: var(--muted); font-size: .88rem; }
     .m-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .m-actions .btn { width: 100%; min-height: 48px; }
-    .m-actions #copy-prompt { grid-column: 1 / -1; }
+    .m-actions .wide { grid-column: 1 / -1; }
     @media (max-width: 767.98px) {
+      .row2 { grid-template-columns: minmax(0, 1fr); }
       .m-actions { grid-template-columns: 1fr; }
       .m-actions .btn { min-height: 52px; }
     }
@@ -200,21 +210,21 @@
         <div>
           <span class="eyebrow">Free &middot; runs on Google Colab</span>
           <h1>Turn a product photo into a 9:16 ad video</h1>
-          <p class="lead">Upload one photo, press Run all, and download a vertical MP4, generated by Wan on a free Google Colab T4 GPU.</p>
+          <p class="lead">Add one photo and press Run all. Get a 15-second vertical ad with an AI-written script, voice-over, captions and music, made on a free Google Colab T4 GPU.</p>
           <div class="cta">
             <button class="btn primary" type="button" data-start aria-haspopup="dialog" aria-controls="start">Start Free</button>
-            <a class="btn" data-colab href="https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Wan2.1_VACE_1.3B_T4_Colab.ipynb" target="_blank" rel="noopener">Open in Colab</a>
+            <a class="btn" data-colab href="https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Advvideo4you_AI_Ad_Generator.ipynb" target="_blank" rel="noopener">Open in Colab</a>
           </div>
           <ul class="trust">
             <li>No sign-up on this site</li>
             <li>Free T4 GPU</li>
-            <li>Your photo stays in your Colab</li>
+            <li>Your photo never leaves your devices</li>
           </ul>
         </div>
         <div class="phone" aria-hidden="true">
           <div class="screen">
             <svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="none" stroke="#fff" stroke-width="3"/><path d="M26 20v24l20-12z" fill="#fff"/></svg>
-            <span>9:16 &middot; 480 &times; 832</span>
+            <span>9:16 &middot; 1080 &times; 1920</span>
           </div>
         </div>
       </div>
@@ -230,17 +240,17 @@
           <article class="card">
             <div class="num">1</div>
             <h3>Upload Photo</h3>
-            <p>Choose one product photo when the notebook asks for it. It is the only thing you have to pick.</p>
+            <p>Pick your photo, product name, language and call to action on this page. They are saved into one small launch file on your device.</p>
           </article>
           <article class="card">
             <div class="num">2</div>
             <h3>Run Notebook</h3>
-            <p>Open the notebook, select the T4 GPU, and choose Runtime &rarr; Run all. It installs, downloads the model and generates the clip for you.</p>
+            <p>Open the notebook, choose Runtime &rarr; Run all, and pick the launch file when asked. It writes the script, records the voice-over, makes the clip and adds captions and music.</p>
           </article>
           <article class="card">
             <div class="num">3</div>
             <h3>Download Video</h3>
-            <p>When it finishes, <code>output.mp4</code> downloads automatically: a vertical clip ready for Reels, Shorts and Stories.</p>
+            <p>When it finishes, a 15-second 1080&times;1920 MP4 downloads automatically, ready for Reels, Shorts and Stories.</p>
           </article>
         </div>
       </div>
@@ -261,17 +271,17 @@
           <article class="card">
             <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
             <h3>T4 GPU</h3>
-            <p>Sized for Colab's free 16&nbsp;GB T4, with automatic fallback to a shorter clip if memory runs out.</p>
+            <p>Sized for Colab's free 16&nbsp;GB T4, with automatic fallback to a shorter AI clip if memory runs out.</p>
           </article>
           <article class="card">
             <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div>
             <h3>9:16 Ads</h3>
-            <p>480&times;832 vertical output, made for Reels, Shorts and other full-screen placements.</p>
+            <p>15-second 1080&times;1920 vertical output, made for Reels, Shorts and other full-screen placements.</p>
           </article>
           <article class="card">
             <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg></div>
-            <h3>Auto Download</h3>
-            <p><code>output.mp4</code> lands on your device the moment it is ready. No copying files out of Colab.</p>
+            <h3>Voice, Captions &amp; Music</h3>
+            <p>AI script, Hindi, English or Bangla voice-over, animated captions and background music, mixed for you and downloaded automatically.</p>
           </article>
         </div>
       </div>
@@ -289,27 +299,31 @@
           </details>
           <details>
             <summary>Do I need an account?</summary>
-            <p>You need a Google account to use Colab. This website has no accounts, no uploads and no tracking of its own.</p>
+            <p>You need a Google account to use Colab. This website has no accounts, no servers that receive your data and no tracking of its own.</p>
           </details>
           <details>
             <summary>Where does my photo go?</summary>
-            <p>Only into your own Colab session, where the notebook turns it into the first frame of the video. It is never sent to this website.</p>
+            <p>Your browser resizes it and saves it, together with your settings, into a launch file on your device. You upload that file to your own Colab session, where it becomes the first frame of the video. It is never sent to this website.</p>
           </details>
           <details>
-            <summary>Which model does it use?</summary>
-            <p>Wan2.1 VACE-1.3B, run through the official Wan-Video/Wan2.1 repository. Your photo becomes the first frame and the model generates the motion that follows.</p>
+            <summary>Which models does it use?</summary>
+            <p>Video: Wan2.1 VACE-1.3B through the official Wan-Video/Wan2.1 repository (your photo is the first frame). Script: Qwen2.5-1.5B-Instruct, with curated templates as a fallback. Voice: Piper TTS. Music: an original synthesised loop.</p>
           </details>
           <details>
             <summary>How long is the video, and how long does it take?</summary>
-            <p>The default is 49 frames, about 3 seconds at 16 fps. The first run also downloads roughly 19&nbsp;GB of model files, so expect a longer wait then. You can raise the frame count in the notebook's form field at the top of the cell.</p>
+            <p>The ad is 15 seconds. The AI motion is a clip of about 2 seconds (33 frames) that plays forward and backward in a loop with a slow camera drift, so it repeats; the voice, captions and music carry the ad. The first run also downloads about 22&nbsp;GB of models, so it takes much longer. The target for later runs is 6&ndash;8 minutes, but that has not been measured on a real T4.</p>
           </details>
           <details>
             <summary>What if it runs out of memory?</summary>
-            <p>The notebook retries automatically with a shorter clip (33, then 17 frames), so you do not have to change anything.</p>
+            <p>The notebook retries with a shorter AI clip (25, then 17 frames). If the clip still cannot be made, it renders the ad with a slow push-in on your photo instead and tells you so.</p>
+          </details>
+          <details>
+            <summary>Why do I upload a launch file in Colab?</summary>
+            <p>Colab cannot receive settings through a link. So this page writes one file with your photo and choices, and the notebook reads it in its single upload prompt. If you skip it and upload only a photo, the notebook asks for the name, language and call to action on the spot.</p>
           </details>
           <details>
             <summary>Can I use the videos commercially?</summary>
-            <p>Check the license of the Wan2.1 model in its official repository before using the output commercially. This project only provides the notebook.</p>
+            <p>Check the licences first. The English voice is public domain and the Bangla voice is CC BY-SA (credit required), but the Hindi voice is licensed for non-commercial use only. Wan2.1, Qwen and the Noto fonts allow commercial use. AI-written lines are not verified facts, so review the script before publishing.</p>
           </details>
         </div>
       </div>
@@ -320,10 +334,10 @@
     <div class="wrap foot">
       <ul>
         <li><a href="https://github.com/bnkgroups022-cloud/Advvideo4you" target="_blank" rel="noopener">GitHub</a></li>
-        <li><a data-colab href="https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Wan2.1_VACE_1.3B_T4_Colab.ipynb" target="_blank" rel="noopener">Colab</a></li>
+        <li><a data-colab href="https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Advvideo4you_AI_Ad_Generator.ipynb" target="_blank" rel="noopener">Colab</a></li>
         <li><a href="https://github.com/bnkgroups022-cloud/Advvideo4you/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></li>
       </ul>
-      <p>Version <span id="version">1.0.0</span> &middot; &copy; 2026 Advvideo4you</p>
+      <p>Version <span id="version">2.0.0</span> &middot; &copy; 2026 Advvideo4you</p>
     </div>
   </footer>
 
@@ -332,70 +346,82 @@
   <dialog id="start" aria-labelledby="start-title" aria-describedby="start-desc">
     <div class="m-head">
       <div>
-        <h2 id="start-title">Start free in 5 steps</h2>
-        <p id="start-desc">Everything runs in your own Google Colab session.</p>
+        <h2 id="start-title">Start free: set up your ad</h2>
+        <p id="start-desc">Fill this in, get one launch file, and Colab does the rest.</p>
       </div>
       <button class="icon-btn" type="button" data-close aria-label="Close dialog">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
     </div>
     <div class="m-body">
-    <ol class="steps">
-      <li>
-        <div>
-          <h3>Google Colab account required</h3>
-          <p>Sign in with any Google account when Colab asks. Colab and its T4 GPU are free.</p>
+      <form id="launch-form" class="lf" novalidate>
+        <div class="field">
+          <label for="f-photo">Product photo <span class="req">required</span></label>
+          <div class="photo-row">
+            <input id="f-photo" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="f-photo-help f-photo-err">
+            <span class="thumb" id="f-thumb" hidden><img id="f-thumb-img" alt="Preview of your product photo" width="56" height="56"></span>
+          </div>
+          <p class="help" id="f-photo-help">JPG, PNG or WebP, up to 15&nbsp;MB. It is resized in your browser and saved on your device only.</p>
+          <p class="err" id="f-photo-err" role="alert" hidden></p>
         </div>
-      </li>
-      <li>
-        <div>
-          <h3>Use Runtime &rarr; Change runtime type</h3>
-          <p>Open the Runtime menu at the top of the notebook.</p>
-          <span class="path">Runtime &rarr; Change runtime type</span>
+        <div class="field">
+          <label for="f-name">Product name <span class="req">required</span></label>
+          <input id="f-name" type="text" maxlength="60" autocomplete="off" placeholder="e.g. Aroma Tea" aria-describedby="f-name-err">
+          <p class="err" id="f-name-err" role="alert" hidden></p>
         </div>
-      </li>
-      <li>
-        <div>
-          <h3>Select GPU &rarr; T4</h3>
-          <p>Choose the T4 GPU as the hardware accelerator, then press Save.</p>
-          <span class="path">Hardware accelerator &rarr; T4 GPU &rarr; Save</span>
+        <div class="row2">
+          <div class="field">
+            <label for="f-lang">Voice-over language</label>
+            <select id="f-lang">
+              <option value="en">English</option>
+              <option value="hi">Hindi (&#2361;&#2367;&#2344;&#2381;&#2342;&#2368;)</option>
+              <option value="bn">Bangla (&#2476;&#2494;&#2434;&#2482;&#2494;)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="f-cta">Call to action</label>
+            <input id="f-cta" type="text" maxlength="60" autocomplete="off" placeholder="Order now" aria-describedby="f-cta-err">
+            <p class="err" id="f-cta-err" role="alert" hidden></p>
+          </div>
         </div>
-      </li>
-      <li>
-        <div>
-          <h3>Click Runtime &rarr; Run all</h3>
-          <p>This starts everything. The shortcut is Ctrl+F9 (Cmd+F9 on Mac).</p>
-          <span class="path">Runtime &rarr; Run all</span>
+        <div class="field" id="f-spoken-wrap" hidden>
+          <label for="f-spoken">Name as spoken <span class="req">optional</span></label>
+          <input id="f-spoken" type="text" maxlength="60" autocomplete="off" aria-describedby="f-spoken-help f-spoken-err">
+          <p class="help" id="f-spoken-help">If the product name is in English letters, type it here in Hindi or Bangla letters so the voice pronounces it properly.</p>
+          <p class="err" id="f-spoken-err" role="alert" hidden></p>
         </div>
-      </li>
-      <li>
-        <div>
-          <h3>Upload one product photo</h3>
-          <p>When the <strong>Choose Files</strong> button appears under the cell, pick one JPG or PNG photo. <code>output.mp4</code> then downloads automatically when generation finishes.</p>
+        <div class="field">
+          <label for="f-details">What should the ad mention? <span class="req">optional</span></label>
+          <textarea id="f-details" rows="3" maxlength="200" aria-describedby="f-details-help f-details-err"></textarea>
+          <p class="help" id="f-details-help">One idea per line, up to three. The ad only states what you write here; leave it empty for general benefit lines.</p>
+          <p class="err" id="f-details-err" role="alert" hidden></p>
         </div>
-      </li>
-    </ol>
-    <textarea id="prompt-text" class="prompt-box" readonly rows="5" aria-label="Production prompt" hidden>Cinematic vertical product advertisement. The product from the photo stays sharp, centered and unchanged in shape and color. Slow smooth camera push-in with subtle parallax, soft studio key light with a gentle rim highlight, clean background with light bokeh, realistic reflections, natural subtle motion, premium commercial look, high detail.</textarea>
-    <p class="m-hint">Tip: paste the copied prompt into the <code>PROMPT</code> field at the top of the notebook cell.</p>
-    <div class="m-foot">
-      <span>The first run also downloads about 19&nbsp;GB of model files.</span>
-      <button class="btn small" type="button" data-close>Close</button>
-    </div>
+      </form>
+      <ol class="next">
+        <li>Your photo and settings are saved into <code>advvideo-launch.json</code> on this device.</li>
+        <li>Colab opens. Press <strong>Runtime &rarr; Run all</strong>. If it is not on the T4 already: Runtime &rarr; Change runtime type &rarr; T4 GPU.</li>
+        <li>When the upload button appears, choose <code>advvideo-launch.json</code>. That is the only click.</li>
+        <li>The finished 15-second MP4 downloads automatically.</li>
+      </ol>
+      <div class="m-foot">
+        <span>The first run also downloads about 22&nbsp;GB of model files.</span>
+        <button class="btn small" type="button" data-close>Close</button>
+      </div>
     </div>
     <div class="m-footer">
       <div id="m-status" class="status" role="status" aria-live="polite"></div>
       <div class="m-actions">
-        <a class="btn primary" data-colab href="https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Wan2.1_VACE_1.3B_T4_Colab.ipynb" target="_blank" rel="noopener">Open Colab Notebook</a>
-        <a class="btn" href="https://github.com/bnkgroups022-cloud/Advvideo4you" target="_blank" rel="noopener">View GitHub</a>
-        <button class="btn" type="button" id="copy-prompt">Copy Prompt</button>
+        <button class="btn primary" type="submit" form="launch-form" id="launch-open">Open Colab with my settings</button>
+        <button class="btn" type="button" id="launch-download">Download launch file</button>
+        <a class="btn wide" href="https://github.com/bnkgroups022-cloud/Advvideo4you" target="_blank" rel="noopener">View GitHub</a>
       </div>
     </div>
   </dialog>
 
   <script>
     (function () {
-      var NOTEBOOK_URL = "https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Wan2.1_VACE_1.3B_T4_Colab.ipynb";
-      var RAW_URL = "https://raw.githubusercontent.com/bnkgroups022-cloud/Advvideo4you/main/colab/Wan2.1_VACE_1.3B_T4_Colab.ipynb";
+      var NOTEBOOK_URL = "https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Advvideo4you_AI_Ad_Generator.ipynb";
+      var RAW_URL = "https://raw.githubusercontent.com/bnkgroups022-cloud/Advvideo4you/main/colab/Advvideo4you_AI_Ad_Generator.ipynb";
       var GITHUB_URL = "https://github.com/bnkgroups022-cloud/Advvideo4you";
       var dlg = document.getElementById("start");
       var toast = document.getElementById("toast");
@@ -440,47 +466,189 @@
           .then(function () { if (timer) clearTimeout(timer); });
       }
 
-      function openColab(e) {
-        if (e.button > 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;   // let the browser handle new-tab gestures
-        e.preventDefault();
+      // Opens the notebook in a new tab. Returns true on success; otherwise shows a friendly message and returns false.
+      function openNotebook() {
         if (notebookOk === false) {
           notify("Notebook unavailable. Open GitHub instead.", { href: GITHUB_URL, label: "Open GitHub" });
           checkNotebook();
-          return;
+          return false;
         }
         var w = null;
         try { w = window.open(NOTEBOOK_URL, "_blank"); } catch (err) { w = null; }
         if (w) {
           try { w.opener = null; } catch (err) {}
           checkNotebook();
-        } else {
-          notify("Your browser blocked the new tab. Allow pop-ups for this site, or open the notebook in this tab.",
-            { href: NOTEBOOK_URL, label: "Open notebook here", sameTab: true });
+          return true;
         }
+        notify("Your browser blocked the new tab. Allow pop-ups for this site, or open the notebook in this tab.",
+          { href: NOTEBOOK_URL, label: "Open notebook here", sameTab: true });
+        return false;
       }
-      var promptBox = document.getElementById("prompt-text");
-      var copyBtn = document.getElementById("copy-prompt");
-      function copyPrompt() {
-        var text = promptBox.value;
-        function done() { promptBox.hidden = true; notify("✓ Prompt copied."); }
-        function manual() {
-          // Fallback 1: select the text and use the legacy copy command. Fallback 2: leave it selected for Ctrl+C.
-          promptBox.hidden = false;
-          promptBox.focus();
-          promptBox.select();
-          var copied = false;
-          try { copied = document.execCommand("copy"); } catch (err) { copied = false; }
-          if (copied) { done(); copyBtn.focus(); return; }
-          notify("Copy was blocked by your browser. The prompt is selected above: press Ctrl+C (Cmd+C on Mac) to copy it.");
-          promptBox.scrollIntoView({ block: "nearest" });
-        }
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(text).then(done, manual);
-        } else {
-          manual();
-        }
+      function openColab(e) {
+        if (e.button > 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;   // let the browser handle new-tab gestures
+        e.preventDefault();
+        openNotebook();
       }
-      copyBtn.addEventListener("click", copyPrompt);
+      // ---- Launch flow: collect the inputs, write one launch file (settings + resized photo), open Colab. ----
+      // Colab cannot receive parameters through a link, so the file is uploaded in the notebook's single upload prompt.
+      var DEFAULT_CTA = { en: "Order now", hi: "अभी ऑर्डर करें", bn: "এখনই অর্ডার করুন" };
+      var MAX_PHOTO_BYTES = 15 * 1024 * 1024;
+      var STORE_KEY = "advvideo-launch-form";
+      var form = document.getElementById("launch-form");
+      var fPhoto = document.getElementById("f-photo");
+      var fName = document.getElementById("f-name");
+      var fLang = document.getElementById("f-lang");
+      var fCta = document.getElementById("f-cta");
+      var fSpoken = document.getElementById("f-spoken");
+      var fDetails = document.getElementById("f-details");
+      var spokenWrap = document.getElementById("f-spoken-wrap");
+      var thumb = document.getElementById("f-thumb");
+      var thumbImg = document.getElementById("f-thumb-img");
+      var photo = { state: "none", data: null, waiting: [] };   // none | working | ready | error
+
+      function setError(input, message) {
+        var err = document.getElementById(input.id + "-err");
+        if (message) { err.textContent = message; err.hidden = false; input.setAttribute("aria-invalid", "true"); }
+        else { err.textContent = ""; err.hidden = true; input.removeAttribute("aria-invalid"); }
+      }
+      function squash(text) { return String(text || "").replace(/[\x00-\x1f\x7f]+/g, " ").replace(/\s+/g, " ").trim(); }
+
+      // Validate every field; returns null (and focuses the first problem) or the cleaned values.
+      function readFields() {
+        var problems = [];
+        var name = squash(fName.value), cta = squash(fCta.value), spoken = squash(fSpoken.value);
+        var lines = String(fDetails.value || "").split(/[\r\n;]+/).map(squash).filter(Boolean);
+        setError(fName, name ? (name.length > 60 ? "Use at most 60 characters." : "") : "Enter the product name.");
+        setError(fCta, cta.length > 60 ? "Use at most 60 characters." : "");
+        setError(fSpoken, spoken.length > 60 ? "Use at most 60 characters." : "");
+        var detailsError = "";
+        if (lines.length > 3) detailsError = "Use at most three lines.";
+        else if (lines.some(function (l) { return l.length > 80; })) detailsError = "Keep each line under 80 characters.";
+        setError(fDetails, detailsError);
+        var photoError = "";
+        if (photo.state === "none") photoError = "Choose a product photo.";
+        else if (photo.state === "error") photoError = photo.message;
+        setError(fPhoto, photoError);
+        [[fPhoto, photoError], [fName, !name || name.length > 60], [fCta, cta.length > 60], [fSpoken, spoken.length > 60], [fDetails, detailsError]]
+          .forEach(function (pair) { if (pair[1]) problems.push(pair[0]); });
+        if (problems.length) { problems[0].focus(); return null; }
+        return { name: name, language: fLang.value, cta: cta, spoken: spoken, details: lines };
+      }
+
+      function decodePhoto(file) {
+        return new Promise(function (resolve, reject) {
+          var reader = new FileReader();
+          reader.onerror = function () { reject(new Error("read")); };
+          reader.onload = function () {
+            var img = new Image();
+            img.onerror = function () { reject(new Error("decode")); };
+            img.onload = function () {
+              try {
+                var scale = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+                var w = Math.max(1, Math.round(img.naturalWidth * scale)), h = Math.max(1, Math.round(img.naturalHeight * scale));
+                var canvas = document.createElement("canvas");
+                canvas.width = w; canvas.height = h;
+                var ctx = canvas.getContext("2d");
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(0, 0, w, h);
+                ctx.drawImage(img, 0, 0, w, h);
+                var url = canvas.toDataURL("image/jpeg", 0.9);
+                resolve({ mime: "image/jpeg", data: url.slice(url.indexOf(",") + 1), width: w, height: h, preview: url });
+              } catch (err) { reject(err); }
+            };
+            img.src = String(reader.result);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function finishPhoto(state, data, message) {
+        photo.state = state; photo.data = data; photo.message = message;
+        var waiting = photo.waiting; photo.waiting = [];
+        waiting.forEach(function (fn) { fn(); });
+      }
+      fPhoto.addEventListener("change", function () {
+        var file = fPhoto.files && fPhoto.files[0];
+        thumb.hidden = true;
+        if (!file) { photo.state = "none"; setError(fPhoto, ""); return; }
+        var typeOk = /^image\/(jpeg|png|webp)$/.test(file.type) || /\.(jpe?g|png|webp)$/i.test(file.name);
+        if (!typeOk) { finishPhoto("error", null, "Use a JPG, PNG or WebP photo."); setError(fPhoto, photo.message); return; }
+        if (file.size > MAX_PHOTO_BYTES) { finishPhoto("error", null, "This photo is larger than 15 MB."); setError(fPhoto, photo.message); return; }
+        setError(fPhoto, "");
+        photo.state = "working";
+        decodePhoto(file).then(function (data) {
+          thumbImg.src = data.preview;
+          thumb.hidden = false;
+          finishPhoto("ready", data, "");
+        }, function () {
+          finishPhoto("error", null, "This photo could not be read. Try a JPG or PNG.");
+          setError(fPhoto, photo.message);
+        });
+      });
+
+      function syncLanguage() {
+        var lang = fLang.value;
+        fCta.placeholder = DEFAULT_CTA[lang] || DEFAULT_CTA.en;
+        spokenWrap.hidden = lang === "en";
+      }
+      function saveForm() {
+        try {
+          localStorage.setItem(STORE_KEY, JSON.stringify({ name: fName.value, language: fLang.value, cta: fCta.value, spoken: fSpoken.value, details: fDetails.value }));
+        } catch (err) {}
+      }
+      function restoreForm() {
+        try {
+          var saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+          if (saved && !fName.value) {
+            fName.value = saved.name || ""; fCta.value = saved.cta || ""; fSpoken.value = saved.spoken || ""; fDetails.value = saved.details || "";
+            if (DEFAULT_CTA[saved.language]) fLang.value = saved.language;
+          }
+        } catch (err) {}
+        syncLanguage();
+      }
+      [fName, fLang, fCta, fSpoken, fDetails].forEach(function (el) { el.addEventListener("input", saveForm); el.addEventListener("change", saveForm); });
+      fLang.addEventListener("change", syncLanguage);
+      syncLanguage();
+
+      function launchJson(values, image) {
+        return JSON.stringify({
+          version: 1,
+          product_name: values.name,
+          language: values.language,
+          cta: values.cta || DEFAULT_CTA[values.language],
+          spoken_name: values.spoken,
+          details: values.details.join("\n"),
+          image: { mime: image.mime, data: image.data }
+        });
+      }
+      function saveLaunchFile(text) {
+        var blob = new Blob([text], { type: "application/json" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url; a.download = "advvideo-launch.json"; a.style.display = "none";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+      }
+
+      // kind: "open" (download the file and open Colab) or "download" (file only)
+      function launch(kind) {
+        var values = readFields();
+        if (!values) return;
+        var opened = kind === "open" ? openNotebook() : false;   // must run inside the click, before any waiting
+        function finish() {
+          if (photo.state !== "ready") { setError(fPhoto, photo.message || "This photo could not be read."); fPhoto.focus(); return; }
+          saveLaunchFile(launchJson(values, photo.data));
+          var next = "Launch file saved as advvideo-launch.json. In Colab press Runtime → Run all, then choose that file when asked.";
+          if (kind === "open" && !opened && notebookOk !== false) notify(next, { href: NOTEBOOK_URL, label: "Open Colab", sameTab: true });
+          else if (notebookOk === false) notify("Notebook unavailable. Open GitHub instead. Your launch file was still saved.", { href: GITHUB_URL, label: "Open GitHub" });
+          else notify(next);
+        }
+        if (photo.state === "working") { notify("Preparing your photo…"); photo.waiting.push(finish); } else finish();
+      }
+      form.addEventListener("submit", function (e) { e.preventDefault(); launch("open"); });
+      document.getElementById("launch-download").addEventListener("click", function () { launch("download"); });
       Array.prototype.forEach.call(document.querySelectorAll("[data-colab]"), function (a) { a.addEventListener("click", openColab); });
       checkNotebook();
 
@@ -491,6 +659,7 @@
       function openModal(trigger) {
         if (trigger) lastTrigger = trigger;
         checkNotebook();
+        restoreForm();
         if (typeof dlg.showModal === "function") { if (!dlg.open) dlg.showModal(); } else { dlg.setAttribute("open", ""); }
       }
       function closeModal() {
