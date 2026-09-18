@@ -3,39 +3,378 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Advvideo4you</title>
-  <meta name="description" content="Advvideo4you: turn a product photo into a 9:16 ad video with Wan on a free Google Colab T4.">
+  <title>Advvideo4you – Turn a product photo into a 9:16 ad video, free</title>
+  <meta name="description" content="Upload one product photo, press Run all, and download a vertical 9:16 MP4 ad. Runs on a free Google Colab T4 GPU with the Wan VACE 1.3B model. No server, no cost.">
+  <meta name="theme-color" content="#2b59ff">
+  <link rel="canonical" href="https://advvideo4you.vercel.app/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Advvideo4you">
+  <meta property="og:title" content="Advvideo4you – Turn a product photo into a 9:16 ad video, free">
+  <meta property="og:description" content="Upload one photo, press Run all, download a vertical MP4. Runs on a free Google Colab T4 GPU.">
+  <meta property="og:url" content="https://advvideo4you.vercel.app/">
+  <meta property="og:image" content="https://advvideo4you.vercel.app/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Advvideo4you: turn a product photo into a 9:16 ad video, free on Google Colab">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Advvideo4you – Turn a product photo into a 9:16 ad video, free">
+  <meta name="twitter:description" content="Upload one photo, press Run all, download a vertical MP4. Runs on a free Google Colab T4 GPU.">
+  <meta name="twitter:image" content="https://advvideo4you.vercel.app/og.png">
+  <script>
+    try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}
+  </script>
   <style>
-    :root { --bg: #ffffff; --fg: #14171f; --muted: #5b6474; --line: #dfe3ea; --accent: #2b59ff; --accent-fg: #ffffff; }
+    :root {
+      --bg: #ffffff; --surface: #f5f7fb; --fg: #12151c; --muted: #4d5666; --line: #dde2ec;
+      --accent: #2b59ff; --accent-fg: #ffffff; --accent-soft: #e8edff; --shadow: 0 10px 30px rgba(20, 30, 70, .10);
+    }
     @media (prefers-color-scheme: dark) {
-      :root { --bg: #0e1116; --fg: #eef1f6; --muted: #98a2b3; --line: #262c37; --accent: #6b8cff; --accent-fg: #0e1116; }
+      :root:not([data-theme="light"]) {
+        --bg: #0d1017; --surface: #151a24; --fg: #eef1f7; --muted: #a3adbf; --line: #262d3b;
+        --accent: #7b98ff; --accent-fg: #0d1017; --accent-soft: #1b2340; --shadow: 0 10px 30px rgba(0, 0, 0, .45);
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #0d1017; --surface: #151a24; --fg: #eef1f7; --muted: #a3adbf; --line: #262d3b;
+      --accent: #7b98ff; --accent-fg: #0d1017; --accent-soft: #1b2340; --shadow: 0 10px 30px rgba(0, 0, 0, .45);
     }
     * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-    main { max-width: 640px; margin: 0 auto; padding: 72px 16px; }
-    h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 12px; }
-    p { color: var(--muted); margin: 0 0 24px; }
-    ul { padding-left: 20px; margin: 0 0 32px; color: var(--muted); }
-    li { margin-bottom: 6px; }
-    .actions { display: flex; flex-wrap: wrap; gap: 12px; }
-    a.btn { display: inline-block; padding: 10px 18px; border-radius: 8px; border: 1px solid var(--line); color: var(--fg); text-decoration: none; font-weight: 600; }
-    a.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
-    a.btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+    body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: var(--accent); }
+    h1, h2, h3 { line-height: 1.2; margin: 0; letter-spacing: -0.01em; }
+    p { margin: 0; }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+    .skip { position: absolute; left: -999px; top: 8px; background: var(--accent); color: var(--accent-fg); padding: 8px 14px; border-radius: 8px; z-index: 30; }
+    .skip:focus { left: 8px; }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+    header { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+    .bar { display: flex; align-items: center; gap: 20px; height: 64px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--fg); text-decoration: none; font-size: 1.05rem; }
+    .brand svg { width: 28px; height: 28px; }
+    nav { display: flex; gap: 20px; margin-left: 12px; }
+    nav a { color: var(--muted); text-decoration: none; font-weight: 500; font-size: .95rem; }
+    nav a:hover { color: var(--fg); }
+    .spacer { flex: 1; }
+    .icon-btn { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+    .icon-btn:hover { background: var(--surface); }
+    .icon-btn svg { width: 20px; height: 20px; }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 20px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; }
+    .btn:hover { background: var(--surface); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+    .btn.primary:hover { filter: brightness(1.08); }
+    .btn.small { min-height: 40px; padding: 8px 16px; }
+
+    .hero { padding: 72px 0 56px; }
+    .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 48px; align-items: center; }
+    .eyebrow { display: inline-block; padding: 4px 12px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: .85rem; margin-bottom: 18px; }
+    h1 { font-size: clamp(2.1rem, 5vw, 3.3rem); font-weight: 800; }
+    .lead { margin: 18px 0 28px; font-size: 1.15rem; color: var(--muted); max-width: 34em; }
+    .cta { display: flex; flex-wrap: wrap; gap: 12px; }
+    .trust { margin-top: 22px; display: flex; flex-wrap: wrap; gap: 8px 20px; color: var(--muted); font-size: .9rem; list-style: none; padding: 0; }
+    .trust li::before { content: "\2713"; color: var(--accent); font-weight: 700; margin-right: 6px; }
+
+    .phone { justify-self: center; width: min(260px, 70vw); aspect-ratio: 9 / 16; border-radius: 28px; padding: 10px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
+    .screen { position: relative; height: 100%; border-radius: 20px; overflow: hidden; background: linear-gradient(160deg, #2b59ff 0%, #7a3dff 55%, #ff5d8f 100%); display: grid; place-items: center; color: #fff; }
+    .screen svg { width: 64px; height: 64px; opacity: .95; }
+    .screen span { position: absolute; bottom: 14px; left: 0; right: 0; text-align: center; font-size: .8rem; font-weight: 600; letter-spacing: .04em; opacity: .9; }
+
+    section { padding: 64px 0; }
+    section.alt { background: var(--surface); border-block: 1px solid var(--line); }
+    .head { text-align: center; max-width: 620px; margin: 0 auto 40px; }
+    .head h2 { font-size: clamp(1.6rem, 3.4vw, 2.1rem); font-weight: 800; }
+    .head p { color: var(--muted); margin-top: 10px; }
+    .grid { display: grid; gap: 20px; }
+    .grid.three { grid-template-columns: repeat(3, 1fr); }
+    .grid.four { grid-template-columns: repeat(4, 1fr); }
+    .card { background: var(--bg); border: 1px solid var(--line); border-radius: 16px; padding: 24px; }
+    .card h3 { font-size: 1.1rem; margin: 14px 0 8px; }
+    .card p { color: var(--muted); font-size: .97rem; }
+    .num { width: 40px; height: 40px; border-radius: 12px; background: var(--accent); color: var(--accent-fg); display: grid; place-items: center; font-weight: 800; }
+    .ico { width: 44px; height: 44px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+    .ico svg { width: 24px; height: 24px; }
+
+    .faq { max-width: 760px; margin: 0 auto; display: grid; gap: 12px; }
+    details { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 0 20px; }
+    summary { cursor: pointer; padding: 16px 0; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; font-size: 1.4rem; line-height: 1; color: var(--accent); }
+    details[open] summary::after { content: "\2212"; }
+    details p { color: var(--muted); padding-bottom: 18px; }
+
+    footer { border-top: 1px solid var(--line); padding: 32px 0 40px; color: var(--muted); font-size: .92rem; }
+    .foot { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; justify-content: space-between; }
+    .foot ul { display: flex; flex-wrap: wrap; gap: 8px 22px; list-style: none; margin: 0; padding: 0; }
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--fg); }
+
+    dialog { width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow: auto; padding: 0; border: 1px solid var(--line); border-radius: 18px; background: var(--bg); color: var(--fg); box-shadow: var(--shadow); }
+    dialog::backdrop { background: rgba(6, 9, 16, .6); }
+    .m-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 22px 24px 8px; }
+    .m-head h2 { font-size: 1.4rem; }
+    .m-head p { color: var(--muted); font-size: .95rem; margin-top: 4px; }
+    .steps { list-style: none; counter-reset: s; margin: 0; padding: 12px 24px 4px; display: grid; gap: 16px; }
+    .steps li { counter-increment: s; display: grid; grid-template-columns: 34px 1fr; gap: 14px; }
+    .steps li::before { content: counter(s); width: 34px; height: 34px; border-radius: 10px; background: var(--accent); color: var(--accent-fg); display: grid; place-items: center; font-weight: 800; }
+    .steps h3 { font-size: 1rem; margin-bottom: 2px; }
+    .steps p { color: var(--muted); font-size: .94rem; }
+    .path { display: inline-block; margin-top: 6px; padding: 4px 10px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); color: var(--fg); font-size: .88rem; font-weight: 600; }
+    .steps .btn { margin-top: 10px; }
+    .m-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 24px 22px; color: var(--muted); font-size: .88rem; }
+
+    @media (max-width: 900px) {
+      .grid.four { grid-template-columns: repeat(2, 1fr); }
+      .grid.three { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      nav { display: none; }
+      .hero { padding: 40px 0 32px; }
+      .hero-grid { grid-template-columns: 1fr; gap: 32px; }
+      .phone { order: -1; width: min(180px, 50vw); }
+      section { padding: 44px 0; }
+      .cta .btn { flex: 1 1 100%; }
+    }
+    @media (max-width: 520px) {
+      .grid.four { grid-template-columns: 1fr; }
+      .bar .btn.small { padding: 8px 12px; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
   </style>
 </head>
 <body>
-  <main>
-    <h1>Advvideo4you</h1>
-    <p>Turn one product photo into a 9:16 vertical ad video. The generator is a single Google Colab notebook that runs on the free T4 GPU.</p>
-    <ul>
-      <li>Model: Wan2.1 VACE-1.3B, run through the official Wan-Video/Wan2.1 repository</li>
-      <li>Output: 480x832 MP4, downloaded automatically</li>
-      <li>One image upload, then Runtime &rarr; Run all</li>
-    </ul>
-    <div class="actions">
-      <a class="btn primary" href="https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Wan2.1_VACE_1.3B_T4_Colab.ipynb">Open the Colab notebook</a>
-      <a class="btn" href="https://github.com/bnkgroups022-cloud/Advvideo4you">View on GitHub</a>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header>
+    <div class="wrap bar">
+      <a class="brand" href="/" aria-label="Advvideo4you home">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#2b59ff"/><path d="M12 9.5v13l11-6.5z" fill="#fff"/></svg>
+        Advvideo4you
+      </a>
+      <nav aria-label="Primary">
+        <a href="#how">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <span class="spacer"></span>
+      <button class="icon-btn" id="theme" type="button" aria-label="Toggle dark theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+      <button class="btn primary small" type="button" data-start>Start Free</button>
     </div>
+  </header>
+
+  <main id="main">
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <span class="eyebrow">Free &middot; runs on Google Colab</span>
+          <h1>Turn a product photo into a 9:16 ad video</h1>
+          <p class="lead">Upload one photo, press Run all, and download a vertical MP4, generated by Wan on a free Google Colab T4 GPU.</p>
+          <div class="cta">
+            <button class="btn primary" type="button" data-start>Start Free</button>
+            <a class="btn" href="https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Wan2.1_VACE_1.3B_T4_Colab.ipynb" target="_blank" rel="noopener">Open in Colab</a>
+          </div>
+          <ul class="trust">
+            <li>No sign-up on this site</li>
+            <li>Free T4 GPU</li>
+            <li>Your photo stays in your Colab</li>
+          </ul>
+        </div>
+        <div class="phone" aria-hidden="true">
+          <div class="screen">
+            <svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="none" stroke="#fff" stroke-width="3"/><path d="M26 20v24l20-12z" fill="#fff"/></svg>
+            <span>9:16 &middot; 480 &times; 832</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="alt" id="how">
+      <div class="wrap">
+        <div class="head">
+          <h2>How it works</h2>
+          <p>Three steps, one notebook, no setup.</p>
+        </div>
+        <div class="grid three">
+          <article class="card">
+            <div class="num">1</div>
+            <h3>Upload Photo</h3>
+            <p>Choose one product photo when the notebook asks for it. It is the only thing you have to pick.</p>
+          </article>
+          <article class="card">
+            <div class="num">2</div>
+            <h3>Run Notebook</h3>
+            <p>Open the notebook, select the T4 GPU, and choose Runtime &rarr; Run all. It installs, downloads the model and generates the clip for you.</p>
+          </article>
+          <article class="card">
+            <div class="num">3</div>
+            <h3>Download Video</h3>
+            <p>When it finishes, <code>output.mp4</code> downloads automatically: a vertical clip ready for Reels, Shorts and Stories.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="features">
+      <div class="wrap">
+        <div class="head">
+          <h2>Built for free Colab</h2>
+          <p>Everything is tuned to fit the GPU Google gives away.</p>
+        </div>
+        <div class="grid four">
+          <article class="card">
+            <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18a4.5 4.5 0 1 1 .9-8.9A6 6 0 0 1 19.5 11 3.5 3.5 0 0 1 19 18z"/></svg></div>
+            <h3>Free Google Colab</h3>
+            <p>Runs in your own Colab session. Nothing to install and no server to pay for.</p>
+          </article>
+          <article class="card">
+            <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+            <h3>T4 GPU</h3>
+            <p>Sized for Colab's free 16&nbsp;GB T4, with automatic fallback to a shorter clip if memory runs out.</p>
+          </article>
+          <article class="card">
+            <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div>
+            <h3>9:16 Ads</h3>
+            <p>480&times;832 vertical output, made for Reels, Shorts and other full-screen placements.</p>
+          </article>
+          <article class="card">
+            <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg></div>
+            <h3>Auto Download</h3>
+            <p><code>output.mp4</code> lands on your device the moment it is ready. No copying files out of Colab.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="alt" id="faq">
+      <div class="wrap">
+        <div class="head">
+          <h2>Frequently asked questions</h2>
+        </div>
+        <div class="faq">
+          <details>
+            <summary>Is it really free?</summary>
+            <p>Yes. The notebook uses Colab's free T4 GPU. Google decides GPU availability and session limits for free accounts, so you may occasionally have to wait or try again later.</p>
+          </details>
+          <details>
+            <summary>Do I need an account?</summary>
+            <p>You need a Google account to use Colab. This website has no accounts, no uploads and no tracking of its own.</p>
+          </details>
+          <details>
+            <summary>Where does my photo go?</summary>
+            <p>Only into your own Colab session, where the notebook turns it into the first frame of the video. It is never sent to this website.</p>
+          </details>
+          <details>
+            <summary>Which model does it use?</summary>
+            <p>Wan2.1 VACE-1.3B, run through the official Wan-Video/Wan2.1 repository. Your photo becomes the first frame and the model generates the motion that follows.</p>
+          </details>
+          <details>
+            <summary>How long is the video, and how long does it take?</summary>
+            <p>The default is 49 frames, about 3 seconds at 16 fps. The first run also downloads roughly 19&nbsp;GB of model files, so expect a longer wait then. You can raise the frame count in the notebook's form field at the top of the cell.</p>
+          </details>
+          <details>
+            <summary>What if it runs out of memory?</summary>
+            <p>The notebook retries automatically with a shorter clip (33, then 17 frames), so you do not have to change anything.</p>
+          </details>
+          <details>
+            <summary>Can I use the videos commercially?</summary>
+            <p>Check the license of the Wan2.1 model in its official repository before using the output commercially. This project only provides the notebook.</p>
+          </details>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <footer>
+    <div class="wrap foot">
+      <ul>
+        <li><a href="https://github.com/bnkgroups022-cloud/Advvideo4you" target="_blank" rel="noopener">GitHub</a></li>
+        <li><a href="https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Wan2.1_VACE_1.3B_T4_Colab.ipynb" target="_blank" rel="noopener">Colab</a></li>
+        <li><a href="https://github.com/bnkgroups022-cloud/Advvideo4you/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></li>
+      </ul>
+      <p>Version <span id="version">1.0.0</span> &middot; &copy; 2026 Advvideo4you</p>
+    </div>
+  </footer>
+
+  <dialog id="start" aria-labelledby="start-title">
+    <div class="m-head">
+      <div>
+        <h2 id="start-title">Start free in 5 steps</h2>
+        <p>Everything runs in your own Google Colab session.</p>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <ol class="steps">
+      <li>
+        <div>
+          <h3>Open Colab</h3>
+          <p>Open the notebook and sign in with your Google account if asked.</p>
+          <a class="btn primary small" href="https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Wan2.1_VACE_1.3B_T4_Colab.ipynb" target="_blank" rel="noopener">Open notebook in Colab</a>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h3>Pick the free GPU</h3>
+          <p>In Colab, open the Runtime menu and choose the T4.</p>
+          <span class="path">Runtime &rarr; Change runtime type &rarr; T4 GPU &rarr; Save</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h3>Run All</h3>
+          <p>Start everything with one command. The shortcut is Ctrl+F9 (Cmd+F9 on Mac).</p>
+          <span class="path">Runtime &rarr; Run all</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h3>Upload your product photo</h3>
+          <p>When the <strong>Choose Files</strong> button appears under the cell, pick one JPG or PNG photo. This is the only step that needs you.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h3>Download the MP4</h3>
+          <p><code>output.mp4</code> downloads automatically when generation finishes. If your browser blocks it, allow downloads for colab.research.google.com and it will appear.</p>
+        </div>
+      </li>
+    </ol>
+    <div class="m-foot">
+      <span>The first run also downloads about 19&nbsp;GB of model files.</span>
+      <button class="btn small" type="button" data-close>Close</button>
+    </div>
+  </dialog>
+
+  <script>
+    (function () {
+      var dlg = document.getElementById("start");
+      function open() {
+        if (typeof dlg.showModal === "function") { if (!dlg.open) dlg.showModal(); } else { dlg.setAttribute("open", ""); }
+      }
+      function close() {
+        if (typeof dlg.close === "function") { dlg.close(); } else { dlg.removeAttribute("open"); }
+      }
+      Array.prototype.forEach.call(document.querySelectorAll("[data-start]"), function (b) { b.addEventListener("click", open); });
+      Array.prototype.forEach.call(dlg.querySelectorAll("[data-close]"), function (b) { b.addEventListener("click", close); });
+      dlg.addEventListener("click", function (e) { if (e.target === dlg) close(); });
+      if (location.hash === "#start") open();
+
+      var root = document.documentElement;
+      document.getElementById("theme").addEventListener("click", function () {
+        var dark = root.getAttribute("data-theme") === "dark" ||
+          (!root.getAttribute("data-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        var next = dark ? "light" : "dark";
+        root.setAttribute("data-theme", next);
+        try { localStorage.setItem("theme", next); } catch (e) {}
+      });
+    })();
+  </script>
 </body>
 </html>
