@@ -57,8 +57,9 @@
     .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--fg); text-decoration: none; font-size: 1.05rem; }
     .brand svg { width: 28px; height: 28px; }
     nav { display: flex; gap: 20px; margin-left: 12px; }
-    nav a { color: var(--muted); text-decoration: none; font-weight: 500; font-size: .95rem; }
+    nav a { color: var(--muted); text-decoration: none; font-weight: 500; font-size: .95rem; padding: 6px 2px; border-bottom: 2px solid transparent; }
     nav a:hover { color: var(--fg); }
+    nav a[aria-current="true"] { color: var(--fg); border-bottom-color: var(--accent); }
     .spacer { flex: 1; }
     .icon-btn { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
     .icon-btn:hover { background: var(--surface); }
@@ -502,6 +503,60 @@
       });
       if (location.hash === "#start") openModal(null);
       window.addEventListener("hashchange", function () { if (location.hash === "#start") openModal(null); });
+
+      // Navigation: smooth scrolling comes from CSS (scroll-behavior) and the native #hash jump; this adds the
+      // active-section highlight and keeps the hash in step with the section in view (replaceState: no history spam).
+      var header = document.querySelector("header");
+      var navLinks = Array.prototype.slice.call(document.querySelectorAll("nav a[href^='#']"));
+      var sections = navLinks.map(function (a) { return document.getElementById(a.getAttribute("href").slice(1)); }).filter(Boolean);
+      var navLock = null;
+      var navLockTimer = null;
+
+      function markActive(id) {
+        navLinks.forEach(function (a) {
+          if (id && a.getAttribute("href") === "#" + id) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current");
+        });
+      }
+      function syncHash(id) {
+        if (dlg.open || location.hash === "#start" || !history.replaceState) return;
+        var want = id ? "#" + id : "";
+        if (location.hash !== want) history.replaceState(null, "", location.pathname + location.search + want);
+      }
+      function sectionInView() {
+        var line = header.offsetHeight + 24;
+        var current = null;
+        sections.forEach(function (s) { if (s.getBoundingClientRect().top <= line) current = s.id; });
+        if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2 && sections.length) current = sections[sections.length - 1].id;
+        return current;
+      }
+      function updateNav() {
+        if (navLock) return;
+        var id = sectionInView();
+        markActive(id);
+        syncHash(id);
+      }
+      function releaseNavLock() {
+        clearTimeout(navLockTimer);
+        navLock = null;
+        updateNav();
+      }
+      navLinks.forEach(function (a) {
+        a.addEventListener("click", function () {
+          navLock = a.getAttribute("href").slice(1);   // the browser sets the hash; hold the highlight on the target while it scrolls
+          markActive(navLock);
+          clearTimeout(navLockTimer);
+          navLockTimer = setTimeout(releaseNavLock, 1200);
+        });
+      });
+      window.addEventListener("scroll", updateNav, { passive: true });
+      window.addEventListener("scrollend", function () { if (navLock) releaseNavLock(); });
+      window.addEventListener("load", updateNav);
+      window.addEventListener("hashchange", function () {
+        var id = location.hash.slice(1);
+        if (sections.some(function (s) { return s.id === id; })) markActive(id);
+      });
+      dlg.addEventListener("close", updateNav);
+      updateNav();
 
       var root = document.documentElement;
       document.getElementById("theme").addEventListener("click", function () {
