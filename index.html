@@ -511,6 +511,8 @@
       var sections = navLinks.map(function (a) { return document.getElementById(a.getAttribute("href").slice(1)); }).filter(Boolean);
       var navLock = null;
       var navLockTimer = null;
+      var hashSync = false;   // stay hands-off the URL until the browser has finished jumping to a #section from a deep link
+      setTimeout(function () { hashSync = true; }, 600);
 
       function markActive(id) {
         navLinks.forEach(function (a) {
@@ -518,7 +520,7 @@
         });
       }
       function syncHash(id) {
-        if (dlg.open || location.hash === "#start" || !history.replaceState) return;
+        if (!hashSync || dlg.open || location.hash === "#start" || !history.replaceState) return;
         var want = id ? "#" + id : "";
         if (location.hash !== want) history.replaceState(null, "", location.pathname + location.search + want);
       }
@@ -532,6 +534,10 @@
       function updateNav() {
         if (navLock) return;
         var id = sectionInView();
+        if (!id && !hashSync) {
+          var fromUrl = location.hash.slice(1);
+          if (sections.some(function (s) { return s.id === fromUrl; })) id = fromUrl;
+        }
         markActive(id);
         syncHash(id);
       }
