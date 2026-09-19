@@ -65,7 +65,18 @@ def test_pyflakes_clean_when_available():
     assert messages == [], messages
 
 
-def test_intro_states_the_licence_and_limits():
+def test_intro_states_the_licence_limits_and_time_estimates():
     intro = "".join(load()["cells"][0]["source"])
-    for needle in ("non-commercial", "33 frames", "loop", "6-8 minute target", "not been measured", "CC BY-NC-SA"):
+    for needle in ("non-commercial", "33 frames", "loop", "15–25 minutes", "5–8 minutes", "not been measured", "CC BY-NC-SA",
+                   "Start Free", "Run all", "Upload the photo", "Download the video", "WhatsApp Today", "480×832"):
         assert needle in intro, needle
+
+
+def test_model_download_starts_right_after_the_upload_and_before_the_installs():
+    code = code_cell()
+    upload = code.index("files.upload()")
+    prefetch = code.index('"--prefetch"')
+    installs = code.index("plans = [")
+    pipeline = code.index('"advvideo.pipeline", "--launch"')
+    assert upload < prefetch < installs < pipeline
+    assert "import threading" in code and "cache = CACHE_DIR" in code and code.index("cache = CACHE_DIR") < prefetch

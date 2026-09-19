@@ -16,7 +16,7 @@ import sys
 import threading
 import time
 
-from advvideo import __version__, captions, config, music, render, script, voice
+from advvideo import __version__, captions, config, music, render, script, spec, voice
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 WAN_REPO_URL = "https://github.com/Wan-Video/Wan2.1"
@@ -146,6 +146,11 @@ def script_stage(cfg, paths, mode, timeout=420):
 
 
 # ----------------------------------------------------------------------------- voice
+def timeline(durations, items, total):
+    """Voice timeline; the CTA is anchored to start just after the closing card appears."""
+    return voice.plan_timeline([durations[i["id"]] for i in items], total=total, anchor_last=total - spec.CARD_SECONDS + 0.15)
+
+
 def plan_voice(items, synth, total=TOTAL, max_rounds=3):
     """Choose speaking speed (and drop a middle feature if needed) so the speech fits the video.
 
@@ -157,12 +162,12 @@ def plan_voice(items, synth, total=TOTAL, max_rounds=3):
     dropped = []
     durations = synth(items, scale)
     while True:
-        plan = voice.plan_timeline([durations[i["id"]] for i in items], total=total)
+        plan = timeline(durations, items, total)
         rounds = 0
         while plan["speedup"] > 1.02 and scale > voice.MIN_LENGTH_SCALE + 1e-6 and rounds < max_rounds:
             scale = max(voice.MIN_LENGTH_SCALE, round(scale / plan["speedup"], 3))
             durations = synth(items, scale)
-            plan = voice.plan_timeline([durations[i["id"]] for i in items], total=total)
+            plan = timeline(durations, items, total)
             rounds += 1
         if plan["speedup"] <= 1.02:
             break
@@ -222,38 +227,49 @@ def voice_stage(cfg, scr, paths):
 
 # ----------------------------------------------------------------------------- captions + music
 def captions_stage(cfg, voiced, paths, ffmpeg="ffmpeg"):
+    """SRT (every spoken line) plus the on-screen captions and the closing card. Returns (caps dict for render, srt path)."""
     lang = cfg["language"]
-    font = captions.ensure_font(lang, paths.fonts)
+    fonts = captions.ensure_fonts(lang, paths.fonts)
     texts = [i["caption"] for i in voiced["items"]]
     events = captions.caption_events(texts, voiced["plan"]["starts"], voiced["plan"]["ends"], total=TOTAL)
-    laid = captions.layout_events(events, captions.make_measure(font))
+    card = captions.make_card(cfg["product_name"], cfg["cta"], lang, TOTAL)
+    on_screen = captions.burned_events(events, [i["kind"] for i in voiced["items"]], card["start"])
+    measure = captions.make_measure(fonts["native"], latin_path=fonts["latin"])
+    laid = captions.layout_events(on_screen, measure)
     srt_path = os.path.join(paths.out, "captions.srt")
     with open(srt_path, "w", encoding="utf-8") as fh:
         fh.write(captions.to_srt(events))
     conf, filters = render.buildconf_and_filters(ffmpeg)
     caps = captions.parse_ffmpeg_caps(conf, filters)
     backend = captions.choose_backend(lang, caps)
-    log("render", "FFmpeg captions: drawtext=%s harfbuzz=%s ass=%s -> using %s" % (caps["drawtext"], caps["harfbuzz"], caps["ass"], backend))
-    if backend == "drawtext":
-        return {"mode": "drawtext", "filters": captions.drawtext_filters(laid, font, paths.caps)}, srt_path
+    log("render", "FFmpeg captions: ass=%s drawtext=%s harfbuzz=%s -> using %s" % (caps["ass"], caps["drawtext"], caps["harfbuzz"], backend))
     if backend == "ass":
         ass_path = os.path.join(paths.caps, "captions.ass")
+        latin_family = captions.FONTS["en"][2]
         with open(ass_path, "w", encoding="utf-8") as fh:
-            fh.write(captions.to_ass(laid, captions.FONTS[lang][2], lang))
-        return {"mode": "ass", "file": ass_path, "fontsdir": paths.fonts}, srt_path
-    log("render", "WARNING: this FFmpeg has neither drawtext nor libass; the video will have no on-screen captions (SRT still written)")
-    return {"mode": "none"}, srt_path
+            fh.write(captions.to_ass(laid, captions.FONTS[lang][2], lang, card=card, measure=measure, latin_family=latin_family))
+        return {"mode": "ass", "file": ass_path, "fontsdir": paths.fonts, "card": card}, srt_path
+    if backend == "drawtext":
+        filters = captions.drawtext_filters(laid, fonts["native"], paths.caps) + captions.drawtext_card_filters(card, fonts, paths.caps, lang)
+        return {"mode": "drawtext", "filters": filters, "card": card}, srt_path
+    log("render", "WARNING: this FFmpeg has neither libass nor drawtext; the video will have no on-screen text (SRT still written)")
+    return {"mode": "none", "card": card}, srt_path
 
 
-def music_stage(style, paths):
+def music_stage(style, paths, voice_wav=None):
+    """Background track, scaled so it sits at about 20% of the voice-over's loudness."""
+    import numpy as np
     wav = os.path.join(paths.audio, "music.wav")
     seconds = TOTAL + 1.5
     if style == "none":
-        import numpy as np
         music.write_wav_stereo(wav, np.zeros((int(seconds * music.SR), 2), dtype=np.float32), music.SR)
     else:
-        music.write_wav_stereo(wav, music.make_music(style, seconds=seconds), music.SR)
-    log("audio", "music: %s (original synthesised track, CC0)" % style)
+        track = music.make_music(style, seconds=seconds)
+        if voice_wav:
+            samples, _rate = voice.read_wav_mono(voice_wav)
+            track = music.match_to_voice(track, samples)
+        music.write_wav_stereo(wav, track, music.SR)
+    log("audio", "music: %s (original synthesised track, CC0), level about 20%% of the voice" % style)
     return wav
 
 
@@ -280,8 +296,63 @@ def dir_size(path):
     return total
 
 
-def wan_prepare(paths):
+PREFETCH_STALE = 120          # seconds without a heartbeat before a prefetch marker is ignored
+SCRIPT_MODEL = "Qwen/Qwen2.5-1.5B-Instruct"
+
+
+def prefetch_marker(paths):
+    return os.path.join(paths.cache, "prefetch.running")
+
+
+def prefetch_running(paths, now=None):
+    """True while a ``--prefetch`` process is alive (it refreshes its marker file every 30 seconds)."""
+    try:
+        return ((now or time.time()) - os.path.getmtime(prefetch_marker(paths))) < PREFETCH_STALE
+    except OSError:
+        return False
+
+
+def wait_for_prefetch(paths, poll=5.0, sleep=time.sleep):
+    if not prefetch_running(paths):
+        return
+    log("video", "the model download started earlier is still running; waiting for it")
+    while prefetch_running(paths):
+        sleep(poll)
+
+
+def prefetch(paths):
+    """Download everything heavy while the user is still busy (upload, package installs): script model, Wan repo and weights."""
+    marker = prefetch_marker(paths)
+    stop = threading.Event()
+
+    def beat():
+        while not stop.is_set():
+            try:
+                with open(marker, "w") as fh:
+                    fh.write(str(os.getpid()))
+            except OSError:
+                pass
+            stop.wait(30)
+
+    threading.Thread(target=beat, daemon=True).start()
+    try:
+        code_text = ("import os\nos.environ['HF_HUB_DISABLE_PROGRESS_BARS'] = '1'\nfrom huggingface_hub import snapshot_download\n"
+                     "snapshot_download(repo_id=%r, allow_patterns=['*.json', '*.safetensors', '*.txt', 'merges.txt', 'vocab.json'])\n" % SCRIPT_MODEL)
+        code, _ = stream([sys.executable, "-c", code_text], "prefetch")
+        log("prefetch", "script model %s" % ("ready" if code == 0 else "not fetched (the script step will fetch it)"))
+        wan_prepare(paths, wait=False)
+    finally:
+        stop.set()
+        try:
+            os.remove(marker)
+        except OSError:
+            pass
+
+
+def wan_prepare(paths, wait=True):
     """Clone the pinned official repo and download the model (network and disk only, no GPU)."""
+    if wait:
+        wait_for_prefetch(paths)
     repo_ok = os.path.exists(os.path.join(paths.wan_repo, "generate.py")) and os.path.exists(os.path.join(paths.wan_repo, "wan", "vace.py"))
     if not repo_ok:
         shutil.rmtree(paths.wan_repo, ignore_errors=True)
@@ -390,13 +461,18 @@ def main(argv=None):
     p.add_argument("--frames", type=int, default=33)
     p.add_argument("--steps", type=int, default=18)
     p.add_argument("--seed", type=int, default=42)
-    p.add_argument("--no-wan", action="store_true", help="skip the AI clip and use the Ken Burns fallback (CPU test)")
+    p.add_argument("--no-wan", action="store_true", help="skip the AI clip and use a slow zoom on the photo (CPU test)")
+    p.add_argument("--prefetch", action="store_true", help="only download the models into --cache (run in the background while waiting)")
     args = p.parse_args(argv)
 
     started = time.time()
     stamps = {}
     log("pipeline", "Advvideo4you %s" % __version__)
     paths = Paths(args.work, args.cache, args.out)
+    if args.prefetch:
+        prefetch(paths)
+        log("prefetch", "done")
+        return 0
     cfg, image_path = load_inputs(args, paths)
     log("pipeline", "product=%r language=%s cta=%r" % (cfg["product_name"], cfg["language"], cfg["cta"]))
     if shutil.which("ffmpeg") is None or shutil.which("ffprobe") is None:
@@ -439,7 +515,7 @@ def main(argv=None):
     stamps["voice"] = round(time.time() - t0, 1)
     t0 = time.time()
     caps, srt_path = captions_stage(cfg, voiced, paths)
-    music_wav = music_stage(args.music, paths)
+    music_wav = music_stage(args.music, paths, voiced["wav"])
     stamps["captions+music"] = round(time.time() - t0, 1)
 
     log("pipeline", "audio and captions ready; waiting for the video clip")
@@ -449,14 +525,15 @@ def main(argv=None):
     t0 = time.time()
     if video["ok"]:
         loop_src = os.path.join(paths.work, "wan_pingpong.mp4")
-        render.run(render.pingpong_cmd(clip_path, loop_src))
-        motion = "AI clip: %d frames, %s, ping-pong looped" % (video["frames"], video["dtype"])
+        render.run(render.pingpong_cmd(clip_path, loop_src, frames=video["frames"]))
+        motion = "AI clip: %d frames (%.1fs), %s, looped forward and backward with a slow zoom and pan" % (
+            video["frames"], video["frames"] / 16.0, video["dtype"])
     else:
-        loop_src = os.path.join(paths.work, "kenburns.mp4")
-        render.run(render.kenburns_cmd(image_path, loop_src))
-        motion = "FALLBACK: slow push-in on the photo (no AI motion) because: %s" % video["error"]
+        loop_src = os.path.join(paths.work, "still.mp4")
+        render.run(render.still_cmd(image_path, loop_src))
+        motion = "FALLBACK: slow zoom and pan on the photo (no AI motion) because: %s" % video["error"]
     log("render", motion)
-    log("render", "rendering the final 1080x1920 MP4 (voice, music, captions); this takes a couple of minutes")
+    log("render", "rendering the final %dx%d MP4 (zoom, captions, closing card, voice, music)" % (spec.W, spec.H))
     final_name = "advvideo_%s.mp4" % config.slugify(cfg["product_name"])
     final_path = os.path.join(paths.out, final_name)
     render.run(render.final_cmd(loop_src, voiced["wav"], music_wav, final_path, caps))
@@ -466,7 +543,7 @@ def main(argv=None):
 
     report = {"version": __version__, "output": final_path, "info": info, "problems": problems, "motion": motion,
               "script_source": scr["source"], "voice": voice.VOICES[cfg["language"]]["id"],
-              "voice_license": voice.VOICES[cfg["language"]]["license"], "captions": caps["mode"],
+              "voice_license": voice.VOICES[cfg["language"]]["license"], "captions": caps["mode"], "end_card": caps.get("card"),
               "stage_seconds": stamps, "total_minutes": round((time.time() - started) / 60.0, 1)}
     with open(os.path.join(paths.out, "report.json"), "w", encoding="utf-8") as fh:
         json.dump(report, fh, ensure_ascii=False, indent=2)

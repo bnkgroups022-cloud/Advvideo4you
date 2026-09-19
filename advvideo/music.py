@@ -119,3 +119,25 @@ def write_wav_stereo(path, track, sr=SR):
         w.setsampwidth(2)
         w.setframerate(sr)
         w.writeframes(pcm.tobytes())
+
+
+MUSIC_TO_VOICE = 0.13         # scales the raw track so that, after the mix and loudness normalisation, un-ducked music measures
+                              # about 20% (-14 dB) of the voice (measured with a test voice; see TEST_REPORT.md)
+
+
+def rms(samples):
+    return float(np.sqrt(np.mean(np.square(samples, dtype=np.float64)))) if len(samples) else 0.0
+
+
+def speech_rms(voice, floor=0.02):
+    """RMS of the voice over the samples that actually carry speech (the track is mostly silence between lines)."""
+    active = voice[np.abs(voice) > floor * max(float(np.max(np.abs(voice))), 1e-9)] if len(voice) else voice
+    return rms(active)
+
+
+def match_to_voice(track, voice, ratio=MUSIC_TO_VOICE):
+    """Scale the music so its RMS is ``ratio`` times the voice's. Without a usable voice the track is left as it is."""
+    v, m = speech_rms(voice), rms(track)
+    if v <= 0.0 or m <= 0.0:
+        return track
+    return np.clip(track * (ratio * v / m), -1.0, 1.0).astype(np.float32)

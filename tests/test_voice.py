@@ -103,3 +103,17 @@ def test_sequential_plan_is_back_to_back_without_overlap():
     plan = voice.sequential_plan([2.0, 3.0, 4.0])
     assert plan["starts"] == [0.35, 2.65, 5.95] and not plan["fits"] and plan["speedup"] == 1.0
     assert all(plan["starts"][i + 1] >= plan["ends"][i] for i in range(2))
+
+def test_anchor_last_moves_only_the_final_segment_later():
+    plain = voice.plan_timeline([1.5, 1.5, 1.5, 1.5, 1.8])
+    anchored = voice.plan_timeline([1.5, 1.5, 1.5, 1.5, 1.8], anchor_last=12.15)
+    assert anchored["starts"][:-1] == plain["starts"][:-1] and anchored["ends"][:-1] == plain["ends"][:-1]
+    assert anchored["starts"][-1] >= plain["starts"][-1]
+    assert abs(anchored["ends"][-1] - anchored["starts"][-1] - 1.8) < 1e-2
+    assert anchored["ends"][-1] <= 15.0 - 0.9 + 1e-6
+
+
+def test_anchor_last_never_pushes_a_long_final_segment_past_the_tail():
+    anchored = voice.plan_timeline([2.0, 2.0, 2.0, 2.0, 3.4], anchor_last=12.15)
+    assert anchored["ends"][-1] <= 15.0 - 0.9 + 1e-6
+    assert anchored["starts"][-1] >= anchored["ends"][-2]

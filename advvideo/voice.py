@@ -88,11 +88,13 @@ def write_wav_mono(path, samples, rate):
         w.writeframes(pcm.tobytes())
 
 
-def plan_timeline(durations, total=15.0, lead=0.35, tail=0.9, min_gap=0.30, max_gap=0.90):
+def plan_timeline(durations, total=15.0, lead=0.35, tail=0.9, min_gap=0.30, max_gap=0.90, anchor_last=None):
     """Where each spoken segment starts inside the video.
 
     Returns starts/ends (seconds), the gap used, the speed-up factor needed to fit (1.0 = none) and whether it fits
-    without exceeding MAX_SPEEDUP. Spare time is spread evenly between segments (up to max_gap).
+    without exceeding MAX_SPEEDUP. Spare time is spread evenly between segments (up to max_gap). ``anchor_last`` moves the
+    final segment (the call to action) later, to start at that time if it still ends before the tail: the CTA is then
+    spoken while the closing card is on screen.
     """
     n = len(durations)
     speech = float(sum(durations))
@@ -110,6 +112,10 @@ def plan_timeline(durations, total=15.0, lead=0.35, tail=0.9, min_gap=0.30, max_
         starts.append(round(t, 3))
         ends.append(round(t + d, 3))
         t += d + gap
+    if anchor_last is not None and scaled:
+        wanted = min(anchor_last, total - tail - scaled[-1])
+        if wanted > starts[-1]:
+            starts[-1], ends[-1] = round(wanted, 3), round(wanted + scaled[-1], 3)
     return {"starts": starts, "ends": ends, "gap": round(gap, 3), "speedup": round(speedup, 3), "fits": fits,
             "speech_seconds": round(sum(scaled), 3)}
 

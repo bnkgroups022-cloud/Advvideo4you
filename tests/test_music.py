@@ -79,3 +79,22 @@ def test_wav_writer():
         music.write_wav_stereo(p, x, SR)
         with wave.open(p, "rb") as w:
             assert w.getnchannels() == 2 and w.getsampwidth() == 2 and w.getframerate() == SR and w.getnframes() == len(x)
+
+
+def test_music_is_scaled_to_a_fraction_of_the_voice_level():
+    rng = np.random.default_rng(3)
+    voice = np.zeros(SR * 6, dtype=np.float32)
+    voice[SR:3 * SR] = 0.4 * rng.standard_normal(2 * SR).astype(np.float32).clip(-1, 1)      # speech burst, silence around it
+    track = 0.6 * music.make_music("calm", seconds=6.0, sr=SR)
+    scaled = music.match_to_voice(track, voice)
+    ratio = music.rms(scaled) / music.speech_rms(voice)
+    assert abs(ratio - music.MUSIC_TO_VOICE) < 0.01
+    assert scaled.dtype == np.float32 and np.max(np.abs(scaled)) <= 1.0
+    assert music.speech_rms(voice) > music.rms(voice)               # silence between lines does not lower the reference
+    assert 0.05 <= music.MUSIC_TO_VOICE <= 0.25
+
+
+def test_music_left_alone_when_there_is_no_voice():
+    track = music.make_music("calm", seconds=2.0, sr=SR)
+    assert np.array_equal(music.match_to_voice(track, np.zeros(1000, dtype=np.float32)), track)
+    assert np.array_equal(music.match_to_voice(track, np.zeros(0, dtype=np.float32)), track)

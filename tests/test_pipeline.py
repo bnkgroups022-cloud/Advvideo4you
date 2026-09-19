@@ -146,34 +146,81 @@ def test_script_stage_with_templates_writes_script_json():
         assert saved["hook"] == result["hook"]
 
 
-def stub_render_environment(harfbuzz):
+def stub_render_environment(ass, drawtext=True, harfbuzz=True):
     render.buildconf_and_filters = lambda ffmpeg="ffmpeg": (
-        "--enable-libfreetype --enable-libfribidi --enable-libass" + (" --enable-libharfbuzz" if harfbuzz else ""),
-        " T. drawtext V->V x\n T. ass V->V y\n")
+        "--enable-libfreetype --enable-libfribidi" + (" --enable-libass" if ass else "") + (" --enable-libharfbuzz" if harfbuzz else ""),
+        (" T. drawtext V->V x\n" if drawtext else "") + (" T. ass V->V y\n" if ass else ""))
     captions.ensure_font = lambda lang, dest: os.path.join(dest, "missing-font.ttf")   # measure falls back to estimates
 
 
-def test_captions_stage_picks_the_backend_by_language_and_ffmpeg():
+def voiced_for(cfg, seconds=2.0):
+    segs = script.segments(script.template_script(cfg), cfg)
+    items_ = [{"id": "seg%d" % i, "kind": s["kind"], "caption": s["caption"]} for i, s in enumerate(segs)]
+    return {"items": items_, "plan": pipeline.timeline({i["id"]: seconds for i in items_}, items_, pipeline.TOTAL)}
+
+
+def test_captions_stage_uses_libass_when_present_and_drawtext_otherwise():
     original = (render.buildconf_and_filters, captions.ensure_font)
     try:
         with tempfile.TemporaryDirectory() as d:
             paths = pipeline.Paths(os.path.join(d, "w"), os.path.join(d, "c"), os.path.join(d, "o"))
-            for lang, harfbuzz, expected in (("en", False, "drawtext"), ("hi", False, "ass"), ("bn", True, "drawtext")):
-                stub_render_environment(harfbuzz)
+            for lang, ass, expected in (("en", True, "ass"), ("hi", True, "ass"), ("bn", True, "ass"), ("en", False, "drawtext"), ("hi", False, "drawtext")):
+                stub_render_environment(ass)
                 cfg = config.validate_fields("Aroma Tea", lang, "")
-                segs = script.segments(script.template_script(cfg), cfg)
-                items_ = [{"id": "seg%d" % i, "kind": s["kind"], "caption": s["caption"]} for i, s in enumerate(segs)]
-                plan = voice.plan_timeline([2.0] * 5)
-                voiced = {"items": items_, "plan": plan}
-                caps, srt = pipeline.captions_stage(cfg, voiced, paths)
-                assert caps["mode"] == expected, (lang, harfbuzz, caps["mode"])
-                assert os.path.exists(srt) and open(srt, encoding="utf-8").read().count("-->") == 5
+                caps, srt = pipeline.captions_stage(cfg, voiced_for(cfg), paths)
+                assert caps["mode"] == expected, (lang, ass, caps["mode"])
+                assert caps["card"]["start"] == 12.0 and caps["card"]["end"] == 15.0 and caps["card"]["title"] == "Aroma Tea"
+                assert os.path.exists(srt) and open(srt, encoding="utf-8").read().count("-->") == 5     # every spoken line, CTA included
                 if expected == "ass":
-                    assert os.path.exists(caps["file"]) and "Dialogue:" in open(caps["file"], encoding="utf-8").read()
+                    text = open(caps["file"], encoding="utf-8").read()
+                    assert "Dialogue:" in text and "WhatsApp" in text and "Aroma Tea" in text and ",0:00:12.00," in text
+                    assert "PlayResX: 480" in text and "PlayResY: 832" in text
                 else:
-                    assert len(caps["filters"]) >= 5
+                    assert len(caps["filters"]) >= 4 + 3            # caption lines + the three card lines
     finally:
         render.buildconf_and_filters, captions.ensure_font = original
+
+
+def test_captions_stage_without_any_text_renderer_keeps_the_srt():
+    original = (render.buildconf_and_filters, captions.ensure_font)
+    try:
+        with tempfile.TemporaryDirectory() as d:
+            paths = pipeline.Paths(os.path.join(d, "w"), os.path.join(d, "c"), os.path.join(d, "o"))
+            stub_render_environment(False, drawtext=False)
+            cfg = config.validate_fields("Aroma Tea", "en", "")
+            caps, srt = pipeline.captions_stage(cfg, voiced_for(cfg), paths)
+            assert caps["mode"] == "none" and os.path.exists(srt)
+    finally:
+        render.buildconf_and_filters, captions.ensure_font = original
+
+
+def test_the_cta_is_spoken_when_the_closing_card_appears():
+    cfg = config.validate_fields("Aroma Tea", "en", "")
+    v = voiced_for(cfg)
+    starts, ends = v["plan"]["starts"], v["plan"]["ends"]
+    assert 12.0 <= starts[-1] <= 12.3 and ends[-1] <= 15.0 - 0.9 + 1e-6
+    assert all(starts[i + 1] >= ends[i] for i in range(len(starts) - 1))
+
+
+def test_prefetch_marker_and_waiting():
+    with tempfile.TemporaryDirectory() as d:
+        paths = pipeline.Paths(os.path.join(d, "w"), os.path.join(d, "c"), os.path.join(d, "o"))
+        assert not pipeline.prefetch_running(paths)
+        sleeps = []
+        pipeline.wait_for_prefetch(paths, sleep=sleeps.append)          # nothing running: returns at once
+        assert sleeps == []
+        marker = pipeline.prefetch_marker(paths)
+        open(marker, "w").write("123")
+        assert pipeline.prefetch_running(paths)
+        assert not pipeline.prefetch_running(paths, now=os.path.getmtime(marker) + pipeline.PREFETCH_STALE + 1)   # stale marker ignored
+        calls = []
+
+        def fake_sleep(seconds):
+            calls.append(seconds)
+            os.remove(marker)                                           # the download finishes while we wait
+
+        pipeline.wait_for_prefetch(paths, poll=7, sleep=fake_sleep)
+        assert calls == [7]
 
 
 def test_music_stage_writes_audio_for_every_style():
