@@ -2,6 +2,30 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [2.1.0] - 2026-09-19
+
+### Added
+- **Closing call-to-action card** for the last 3 seconds: the product name, your CTA (default "Order Now") and "WhatsApp Today" (Hindi and Bangla versions of the phrases), animated: dimmed picture, name pops in, then the two pills slide up in turn. The CTA is spoken when the card appears; the card replaces the CTA caption.
+- **Rounded captions** with a drop shadow, above the bottom 20% of the frame, timed to the voice. Hindi/Bangla captions switch to the Latin font for product names, so "WhatsApp" and English names render correctly.
+- **Slow zoom and slight pan** over the whole 15 seconds, on a seamless forward-and-backward loop of the AI clip (turning-point frames are no longer doubled, and the 16 fps model output is blended to 30 fps).
+- **Background prefetch:** the script model and the Wan2.1 weights start downloading as soon as the file is uploaded and run while the packages install (`python -m advvideo.pipeline --prefetch`).
+- "How it works" and the Start Free dialog now show the five steps (Start Free, Open Colab, Run All, Upload Photo, Download Video) and the estimated times: first run 15-25 minutes, later runs 5-8 minutes.
+- `TEST_REPORT.md`, `docs/screenshots/`.
+
+### Changed
+- **Output is 480x832** (Wan's native size, so nothing is upscaled), 15 s, 30 fps, H.264 + AAC, `+faststart`. Was 1080x1920.
+- Captions use libass (ASS) whenever FFmpeg has it, for the rounded boxes; `drawtext` (rectangular box) is the fallback. Was: `drawtext` first.
+- Music is scaled to about 20% of the voice's loudness (measured: about -14 dB below the voice with a test voice) and ducked a little more under speech. Was: a fixed gain that measured about 22 dB below.
+- The fallback when no AI clip can be made is a slow zoom and pan on the photo (was a fixed push-in).
+
+### Not changed (kept on purpose)
+- Cached prompt embeddings, checkpoint reuse, the 33/25/17 frame ladder, fp16 first with a bf16 fallback.
+
+### Known limitations
+- Not run end to end on a real Colab T4 by the author (Colab needs a Google sign-in this environment cannot perform); see `TEST_REPORT.md`.
+- The AI motion is about 2 seconds, looped; the 15-25 and 5-8 minute figures are estimates.
+- The Hindi voice is licensed for non-commercial use only.
+
 ## [2.0.0] - 2026-09-19
 
 ### Added
@@ -22,6 +46,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - The AI motion is about 2 seconds, looped forward and backward to 15 seconds.
 - The Hindi voice is licensed for non-commercial use only.
 - The Wan, Piper and LLM stages have not been run end to end on a real Colab T4 by the author; the 6-8 minute target is unmeasured.
+
 ## [1.0.0] - 2026-09-18
 
 ### Added

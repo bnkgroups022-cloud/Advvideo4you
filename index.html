@@ -93,6 +93,12 @@
     .grid { display: grid; gap: 20px; }
     .grid.three { grid-template-columns: repeat(3, 1fr); }
     .grid.four { grid-template-columns: repeat(4, 1fr); }
+    .grid.five { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
+    .grid.five .card { padding: 20px 18px; }
+    .grid.five .card h3 { font-size: 1.02rem; }
+    .grid.five .card p { font-size: .9rem; }
+    .eta { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 32px; margin-top: 28px; color: var(--muted); font-size: .97rem; text-align: center; }
+    .eta strong { color: var(--fg); }
     .card { background: var(--bg); border: 1px solid var(--line); border-radius: 16px; padding: 24px; }
     .card h3 { font-size: 1.1rem; margin: 14px 0 8px; }
     .card p { color: var(--muted); font-size: .97rem; }
@@ -160,7 +166,7 @@
 
     @media (max-width: 900px) {
       .grid.four { grid-template-columns: repeat(2, 1fr); }
-      .grid.three { grid-template-columns: 1fr; }
+      .grid.three, .grid.five { grid-template-columns: 1fr; }
     }
     @media (max-width: 760px) {
       html { scroll-padding-top: 104px; }
@@ -210,7 +216,7 @@
         <div>
           <span class="eyebrow">Free &middot; runs on Google Colab</span>
           <h1>Turn a product photo into a 9:16 ad video</h1>
-          <p class="lead">Add one photo and press Run all. Get a 15-second vertical ad with an AI-written script, voice-over, captions and music, made on a free Google Colab T4 GPU.</p>
+          <p class="lead">Add one photo and press Run all. Get a 15-second vertical ad with AI motion, voice-over, captions, background music and a call-to-action ending, made on a free Google Colab T4 GPU.</p>
           <div class="cta">
             <button class="btn primary" type="button" data-start aria-haspopup="dialog" aria-controls="start">Start Free</button>
             <a class="btn" data-colab href="https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Advvideo4you_AI_Ad_Generator.ipynb" target="_blank" rel="noopener">Open in Colab</a>
@@ -224,7 +230,7 @@
         <div class="phone" aria-hidden="true">
           <div class="screen">
             <svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="none" stroke="#fff" stroke-width="3"/><path d="M26 20v24l20-12z" fill="#fff"/></svg>
-            <span>9:16 &middot; 1080 &times; 1920</span>
+            <span>9:16 &middot; 480 &times; 832</span>
           </div>
         </div>
       </div>
@@ -234,25 +240,36 @@
       <div class="wrap">
         <div class="head">
           <h2>How it works</h2>
-          <p>Three steps, one notebook, no setup.</p>
+          <p>Five steps, one notebook, no setup.</p>
         </div>
-        <div class="grid three">
+        <div class="grid five">
           <article class="card">
             <div class="num">1</div>
-            <h3>Upload Photo</h3>
-            <p>Pick your photo, product name, language and call to action on this page. They are saved into one small launch file on your device.</p>
+            <h3>Click Start Free</h3>
+            <p>Choose your product photo and type the name, language and call to action. They are saved into one small launch file on your device.</p>
           </article>
           <article class="card">
             <div class="num">2</div>
-            <h3>Run Notebook</h3>
-            <p>Open the notebook, choose Runtime &rarr; Run all, and pick the launch file when asked. It writes the script, records the voice-over, makes the clip and adds captions and music.</p>
+            <h3>Open Colab</h3>
+            <p>The button opens the notebook in Google Colab, on the free T4 GPU.</p>
           </article>
           <article class="card">
             <div class="num">3</div>
+            <h3>Run All</h3>
+            <p>Choose Runtime &rarr; Run all. It writes the script, records the voice-over, makes the AI clip and adds captions, music and the ending.</p>
+          </article>
+          <article class="card">
+            <div class="num">4</div>
+            <h3>Upload Photo</h3>
+            <p>When asked, choose the launch file. It already contains your photo. That is the only click.</p>
+          </article>
+          <article class="card">
+            <div class="num">5</div>
             <h3>Download Video</h3>
-            <p>When it finishes, a 15-second 1080&times;1920 MP4 downloads automatically, ready for Reels, Shorts and Stories.</p>
+            <p>A 15-second 480&times;832 MP4 downloads automatically, ready for Reels, Shorts and Stories.</p>
           </article>
         </div>
+        <p class="eta"><span><strong>First run:</strong> 15&ndash;25 minutes (the models download once)</span><span><strong>Later runs:</strong> 5&ndash;8 minutes</span></p>
       </div>
     </section>
 
@@ -276,12 +293,12 @@
           <article class="card">
             <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div>
             <h3>9:16 Ads</h3>
-            <p>15-second 1080&times;1920 vertical output, made for Reels, Shorts and other full-screen placements.</p>
+            <p>15-second 480&times;832 vertical output, made for Reels, Shorts and other full-screen placements.</p>
           </article>
           <article class="card">
             <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg></div>
             <h3>Voice, Captions &amp; Music</h3>
-            <p>AI script, Hindi, English or Bangla voice-over, animated captions and background music, mixed for you and downloaded automatically.</p>
+            <p>AI script, Hindi, English or Bangla voice-over, animated captions, background music and an &ldquo;Order Now&rdquo; ending, mixed for you and downloaded automatically.</p>
           </article>
         </div>
       </div>
@@ -311,11 +328,11 @@
           </details>
           <details>
             <summary>How long is the video, and how long does it take?</summary>
-            <p>The ad is 15 seconds. The AI motion is a clip of about 2 seconds (33 frames) that plays forward and backward in a loop with a slow camera drift, so it repeats; the voice, captions and music carry the ad. The first run also downloads about 22&nbsp;GB of models, so it takes much longer. The target for later runs is 6&ndash;8 minutes, but that has not been measured on a real T4.</p>
+            <p>The ad is 15 seconds. The AI motion is a clip of about 2 seconds (33 frames) that plays forward and backward in a smooth loop with a slow zoom and pan, so it repeats; the voice, captions, music and the last 3&nbsp;seconds (product name, your call to action and &ldquo;WhatsApp Today&rdquo;) carry the ad. Estimated time: 15&ndash;25 minutes for the first run, when about 22&nbsp;GB of models download once, and 5&ndash;8 minutes for later runs. These are estimates that have not been measured on a real T4.</p>
           </details>
           <details>
             <summary>What if it runs out of memory?</summary>
-            <p>The notebook retries with a shorter AI clip (25, then 17 frames). If the clip still cannot be made, it renders the ad with a slow push-in on your photo instead and tells you so.</p>
+            <p>The notebook retries with a shorter AI clip (25, then 17 frames). If the clip still cannot be made, it renders the ad with a slow zoom and pan on your photo instead and tells you so.</p>
           </details>
           <details>
             <summary>Why do I upload a launch file in Colab?</summary>
@@ -337,7 +354,7 @@
         <li><a data-colab href="https://colab.research.google.com/github/bnkgroups022-cloud/Advvideo4you/blob/main/colab/Advvideo4you_AI_Ad_Generator.ipynb" target="_blank" rel="noopener">Colab</a></li>
         <li><a href="https://github.com/bnkgroups022-cloud/Advvideo4you/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></li>
       </ul>
-      <p>Version <span id="version">2.0.0</span> &middot; &copy; 2026 Advvideo4you</p>
+      <p>Version <span id="version">2.1.0</span> &middot; &copy; 2026 Advvideo4you</p>
     </div>
   </footer>
 
@@ -398,13 +415,14 @@
         </div>
       </form>
       <ol class="next">
-        <li>Your photo and settings are saved into <code>advvideo-launch.json</code> on this device.</li>
-        <li>Colab opens. Press <strong>Runtime &rarr; Run all</strong>. If it is not on the T4 already: Runtime &rarr; Change runtime type &rarr; T4 GPU.</li>
-        <li>When the upload button appears, choose <code>advvideo-launch.json</code>. That is the only click.</li>
-        <li>The finished 15-second MP4 downloads automatically.</li>
+        <li><strong>Start Free:</strong> fill in this form.</li>
+        <li><strong>Open Colab:</strong> the button below saves <code>advvideo-launch.json</code> on this device and opens the notebook.</li>
+        <li><strong>Run All:</strong> Runtime &rarr; Run all. If it is not on the T4 already: Runtime &rarr; Change runtime type &rarr; T4 GPU.</li>
+        <li><strong>Upload Photo:</strong> when the upload button appears, choose <code>advvideo-launch.json</code>. That is the only click.</li>
+        <li><strong>Download Video:</strong> the finished 15-second MP4 downloads by itself.</li>
       </ol>
       <div class="m-foot">
-        <span>The first run also downloads about 22&nbsp;GB of model files.</span>
+        <span>First run: 15&ndash;25 minutes (about 22&nbsp;GB of models download once). Later runs: 5&ndash;8 minutes.</span>
         <button class="btn small" type="button" data-close>Close</button>
       </div>
     </div>

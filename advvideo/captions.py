@@ -27,6 +27,7 @@ SLIDE = int(round(40 * K))
 LINE_H = 1.28
 BOTTOM_SAFE = 0.80                     # a caption pill never extends below 80% of the height
 FADE = 0.25
+NATIVE_WIDTH_SAFETY = 1.08             # Pillow's basic layout under-measures shaped Hindi/Bangla text a little; boxes get the margin
 # libass sizes text by the font's full line height, so the same nominal size renders smaller than drawtext's pixel size.
 # Calibrated by rendering the same caption both ways (ffmpeg 5.1 + libass) and comparing widths.
 ASS_SIZE_FACTOR = {"en": 1.5, "hi": 2.0, "bn": 1.6}
@@ -125,7 +126,7 @@ def make_measure(font_path, size=FONT_SIZE, latin_path=None):
         latin = ImageFont.truetype(latin_path, size) if latin_path else native
     except Exception:
         return lambda text: len(text) * size * 0.58
-    return lambda text: sum((native if is_nat else latin).getlength(part) for part, is_nat in split_runs(text))
+    return lambda text: sum((native.getlength(part) * NATIVE_WIDTH_SAFETY) if is_nat else latin.getlength(part) for part, is_nat in split_runs(text))
 
 
 def wrap_lines(text, measure, max_width=MAX_TEXT_WIDTH):
